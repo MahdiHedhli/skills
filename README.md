@@ -5,8 +5,8 @@ Installable [Hermes](https://nousresearch.com/) skills. Tap this repo, then brow
 ```bash
 hermes skills tap add MahdiHedhli/skills
 hermes skills search scope-first
-hermes skills install MahdiHedhli/scope-first
-hermes skills install MahdiHedhli/neckbeard
+hermes skills install MahdiHedhli/skills/scope-first
+hermes skills install MahdiHedhli/skills/neckbeard
 ```
 
 ## scope-first
