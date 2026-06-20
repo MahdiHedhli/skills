@@ -17,7 +17,7 @@ Plan-first discipline for builds. Before delegating or writing code, the agent u
 
 ## neckbeard
 
-<img src="neckbeard/neckbeard.jpg" align="right" width="220" alt="Neckbeard mascot — doesn't write less code, writes the correct code" />
+<img src="skills/neckbeard/neckbeard.jpg" align="right" width="220" alt="Neckbeard mascot — doesn't write less code, writes the correct code" />
 
 Minimalism ruleset for code generation. Climb the ladder (YAGNI → stdlib → platform →
 installed dep → one line → minimum that works) while **never pruning the protected set**
