@@ -7,6 +7,7 @@ hermes skills tap add MahdiHedhli/skills
 hermes skills search scope-first
 hermes skills install MahdiHedhli/skills/scope-first
 hermes skills install MahdiHedhli/skills/neckbeard
+hermes skills install MahdiHedhli/skills/hermes-developer
 ```
 
 ## scope-first
@@ -25,6 +26,26 @@ installed dep → one line → minimum that works) while **never pruning the pro
 negligent. Vendored from the Ponytail ruleset (MIT) and renamed.
 
 <br clear="right" />
+
+
+## hermes-developer
+
+Platform development skill for **building on Hermes Agent itself** — architecture,
+contribution rubric, footprint ladder (skill → plugin → MCP → core tool), extension
+routing, and a docs refresh workflow against the official developer guide + `AGENTS.md`.
+
+Use when writing core PRs, plugins, tools, providers, or adapters. For day-to-day
+install/configure/CLI ops, keep using the bundled `hermes-agent` skill.
+
+```bash
+hermes skills install MahdiHedhli/skills/hermes-developer
+# or after tap:
+hermes skills search hermes-developer
+```
+
+Includes `references/` (architecture snapshot, extension map, contributing checklist,
+workflows) and `scripts/refresh_from_docs.py` to re-sync from a local
+`$HERMES_HOME/hermes-agent` checkout.
 
 ---
 
