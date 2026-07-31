@@ -622,6 +622,21 @@ carries only `buzz-relay`, `buzz-admin`, `buzz-pair-relay`.
   still shows the stale `agent_cmd=`. Always `reset-failed` before restart.
 - Agents can **join channels themselves**: `buzz channels join --channel <uuid>`
   works with the agent's own key; `add-member` requires channel-owner authority.
+- **`BUZZ_ACP_SYSTEM_PROMPT` replaces the built-in prompt, it does not append.**
+  That built-in prompt is what tells the agent to post replies via the `buzz` CLI,
+  so overriding it produces an agent that completes turns (`outcome="ok"`), emits
+  👀 reactions, and never sends a message. One of the most convincing silent
+  failures in the stack.
+- **Runtimes split into two classes** the docs never distinguish. Coding CLIs
+  (claude-agent-acp, codex-acp, grok, opencode, cursor…) bring their own shell and
+  post replies unaided. `buzz-agent` is a bare LLM loop with no tools — it
+  generates fine but cannot *act*, and its stderr never reaches the journal, so it
+  fails invisibly. For a local-inference seat, point a **coding CLI** at your
+  OpenAI-compatible endpoint rather than using `buzz-agent`.
+- **Check the served context length.** A local endpoint may load a model with far
+  less context than it supports (LM Studio defaults low). A coding CLI's system
+  prompt overflows 8K instantly: *"number of tokens to keep from the initial prompt
+  is greater than the context length"*.
 
 ### Where headless agents appear (and don't)
 
