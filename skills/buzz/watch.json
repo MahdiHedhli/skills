@@ -1,0 +1,143 @@
+{
+  "repo": "block/buzz",
+  "branch": "main",
+  "compiled_at": "2026-07-31",
+  "head_at_compile": "e5e5bac2a932b2b2e4eb6b559d5545a992c21b96",
+  "_comment": "Pinned last-commit SHA per watched file. Each file backs named SKILL.md sections; when a file drifts, re-read it and repair those sections. Run scripts/check_updates.py to compare against upstream, and --update to re-pin AFTER repairing the prose.",
+  "files": [
+    {
+      "path": "crates/buzz-acp/README.md",
+      "sha": "95fdf9788009",
+      "backs": "The dispatch model (author gate, subscription, serialization, heartbeat, owner commands); Running it (harness config); Debugging",
+      "priority": "critical"
+    },
+    {
+      "path": "crates/buzz-auth/src/nip42.rs",
+      "sha": "d99ad131f176",
+      "backs": "Debugging \u2014 the four NIP-42 rejection reasons, URL normalization rules, \u00b160s tolerance",
+      "priority": "critical"
+    },
+    {
+      "path": "crates/buzz-acp/src/base_prompt.md",
+      "sha": "7adc46268d5e",
+      "backs": "Agent-facing surfaces \u2014 CLI command groups, mention rules",
+      "priority": "high"
+    },
+    {
+      "path": "crates/buzz-core/src/kind.rs",
+      "sha": "114d40d9d37f",
+      "backs": "Event kinds; Git \u2014 kind numbers, SHARED_GATED_KINDS, persona privacy",
+      "priority": "high"
+    },
+    {
+      "path": "Justfile",
+      "sha": "61ba9dfaa008",
+      "backs": "Running it \u2014 mesh=1 recipes, setup/dev/relay, mesh-dev-fresh",
+      "priority": "high"
+    },
+    {
+      "path": "docs/buzz-shared-compute-dev.md",
+      "sha": "54638ff4bb5a",
+      "backs": "Running it \u2014 shared compute (mesh-llm) enablement, ports 9337/3131, model guidance",
+      "priority": "high"
+    },
+    {
+      "path": "crates/buzz-cli/src/lib.rs",
+      "sha": "262f2392e3b7",
+      "backs": "Git \u2014 repos create/bind/protect, pr, messages send-diff flags",
+      "priority": "medium"
+    },
+    {
+      "path": "deploy/compose/README.md",
+      "sha": "7012d86d52fd",
+      "backs": "Running it \u2014 production/single-node deploy, run.sh, required env",
+      "priority": "medium"
+    },
+    {
+      "path": "crates/buzz-workflow/src/schema.rs",
+      "sha": "9b0f74480469",
+      "backs": "Personas, teams, workflows \u2014 triggers and actions",
+      "priority": "medium"
+    },
+    {
+      "path": "README.md",
+      "sha": "052174a148f9",
+      "backs": "Running it (quick start, packaged-build guidance); What Buzz does not have (maturity table)",
+      "priority": "medium"
+    },
+    {
+      "path": "desktop/src-tauri/tauri.conf.json",
+      "sha": "3a96acea09b4",
+      "backs": "Running it \u2014 the bundled sidecar list proving packaged builds ship no relay",
+      "priority": "medium"
+    },
+    {
+      "path": "crates/buzz-core/src/git_perms.rs",
+      "sha": "788b3c002bd2",
+      "backs": "Git \u2014 channel-role-equals-repo-role model, buzz-protect rules",
+      "priority": "low"
+    },
+    {
+      "path": "crates/buzz-core/src/agent_turn_metric.rs",
+      "sha": "71265ca36105",
+      "backs": "Event kinds \u2014 turn metrics, kind 44200 payload",
+      "priority": "low"
+    },
+    {
+      "path": "crates/buzz-persona/src/persona.rs",
+      "sha": "1580046b3c2c",
+      "backs": "Personas, teams, workflows \u2014 persona fields, respond_to_allowlist",
+      "priority": "low"
+    },
+    {
+      "path": "crates/buzz-sdk/src/mentions.rs",
+      "sha": "73cc31cc5283",
+      "backs": "Agent-facing surfaces \u2014 mention resolution semantics",
+      "priority": "low"
+    },
+    {
+      "path": "crates/buzz-dev-mcp/src/lib.rs",
+      "sha": "5afa16157a63",
+      "backs": "Agent-facing surfaces \u2014 agent coding toolset",
+      "priority": "low"
+    },
+    {
+      "path": "crates/buzz-workflow/src/executor.rs",
+      "sha": "60a171b19efd",
+      "backs": "Personas, teams, workflows; Git \u2014 trigger_* template vars, webhook field mapping",
+      "priority": "medium"
+    },
+    {
+      "path": "desktop/src-tauri/src/managed_agents/discovery/presets.rs",
+      "sha": "1b3ff96a5764",
+      "backs": "Mental model; Running it \u2014 the real preset runtime list (the ACP README is stale)",
+      "priority": "high"
+    },
+    {
+      "path": "desktop/src/features/agents/ui/agentConfigOptions.tsx",
+      "sha": "ab55fee81896",
+      "backs": "Agent-facing surfaces \u2014 per-runtime model options and which runtimes need credentials vs CLI OAuth",
+      "priority": "high"
+    }
+  ],
+  "absence_probes": {
+    "_comment": "Terms that MUST return 0 hits. Do not add terms that already exist (e.g. max_turns_per_session is a real flag \u2014 probing it guarantees a false alarm). Any hit means Buzz grew a consecutive-turn reply guard, and 'What Buzz does not have' plus 'If you are comparing' need rewriting.",
+    "terms": [
+      "should_respond",
+      "loop_guard",
+      "consecutive_turns",
+      "turn_limit"
+    ]
+  },
+  "distribution": {
+    "_comment": "Canonical home of this skill. `check_updates.py --repo` compares the local copy against it, so an installed copy can tell when it is stale.",
+    "repo": "MahdiHedhli/skills",
+    "branch": "main",
+    "path": "skills/buzz",
+    "files": [
+      "SKILL.md",
+      "watch.json",
+      "scripts/check_updates.py"
+    ]
+  }
+}
