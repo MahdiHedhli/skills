@@ -128,5 +128,16 @@
       "consecutive_turns",
       "turn_limit"
     ]
+  },
+  "distribution": {
+    "_comment": "Canonical home of this skill. `check_updates.py --repo` compares the local copy against it, so an installed copy can tell when it is stale.",
+    "repo": "MahdiHedhli/skills",
+    "branch": "main",
+    "path": "skills/buzz",
+    "files": [
+      "SKILL.md",
+      "watch.json",
+      "scripts/check_updates.py"
+    ]
   }
 }
