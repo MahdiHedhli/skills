@@ -99,6 +99,52 @@ Filters by **who authored** the event. Disallowed authors are dropped silently
   resets on any agent stdout activity.
 - `BUZZ_ACP_MAX_TURN_DURATION` (default **7200s**) — absolute wall-clock safety valve.
 
+### Per-channel policy — subscription rules
+
+The author gate is process-wide, but **rules give per-channel control of who may
+trigger a turn**, from one seat. Three settings must line up; miss the first and
+your rules file loads and is silently ignored:
+
+```bash
+BUZZ_ACP_SUBSCRIBE=config          # WITHOUT THIS, rules are never consulted
+BUZZ_ACP_CONFIG=/path/rules.toml
+BUZZ_ACP_RESPOND_TO=allowlist      # gate permissive; rules re-close per channel
+```
+
+`resolve_channel_filters()` reads rules **only** under `SubscribeMode::Config`;
+`mentions` and `all` synthesize a default rule instead. This is why a malformed
+config can start perfectly clean — it was never read.
+
+```toml
+[[rules]]
+name = "team"
+channels = ["<uuid>"]          # or "all"
+kinds = [9]
+require_mention = true
+filter = 'author == "<hex>" || author == "<hex>"'
+prompt_tag = "team"            # surfaced to the prompt template
+```
+
+Filter context is exactly five variables — `author`, `content`, `kind`,
+`channel_id`, `timestamp` — plus `str_contains` / `str_starts_with` /
+`str_ends_with` / `str_len` and `== != && ||`.
+
+| Goal | Filter | Verified |
+|---|---|---|
+| admin/owner-only | `author == "<hex>"` | ✅ |
+| team / group | `author == "<a>" \|\| author == "<b>"` | ✅ |
+| command-gated | `str_starts_with(content, "!ask")` | ✅ |
+| combined | `author == "<hex>" && str_contains(content, "deploy")` | — |
+
+> **Role-based control is impossible.** The context carries no channel role, no
+> membership, no team — only a pubkey. "Only channel admins" must be materialized
+> into an explicit pubkey list and regenerated when membership changes.
+
+Both failure paths are **fail-closed**: an event matching no rule is dropped
+(`"event matched no rule — dropping"`), and a filter that errors or times out
+repeatedly disables the rule and yields no match rather than falling through.
+Under `subscribe=config`, a channel you forget to list goes **silent**, not open.
+
 ### Out-of-band owner control
 Checked **before** the author gate, so the owner can always steer a wedged agent.
 Must be **kind:9 from the owner, `p`-tagging the agent**; consumed by the harness,
