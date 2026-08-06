@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Check whether skills/buzz/SKILL.md has gone stale against upstream block/buzz.
+"""Check whether the Buzz skill bundle has gone stale against upstream block/buzz.
 
 Buzz moves fast. Rather than diffing repo HEAD (which churns constantly and tells
-you nothing), this watches only the files each SKILL.md claim actually rests on,
+you nothing), this watches curated high-signal paths backing named canonical sections
 and reports the commit subjects landed on each one since the skill was compiled.
 
 Usage:
@@ -10,7 +10,8 @@ Usage:
     python3 check_updates.py --repo       # is my copy of this SKILL stale vs its repo?
     python3 check_updates.py --all        # both
     python3 check_updates.py --verbose    # include unchanged files
-    python3 check_updates.py --update     # re-pin SHAs (ONLY after repairing SKILL.md)
+    python3 check_updates.py --ack PATH --from-sha OLD --reviewed-sha NEW
+        --disposition claims-updated --note "what was reviewed and repaired"
 
 Exit codes: 0 = current, 1 = drift found, 2 = check could not run.
 
@@ -21,12 +22,16 @@ unauthenticated requests (60/hr rate limit, enough for one run).
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import sys
+import tempfile
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from contextlib import contextmanager
 from datetime import date
 from pathlib import Path
 
@@ -34,6 +39,75 @@ API = "https://api.github.com"
 MANIFEST = Path(__file__).resolve().parent.parent / "watch.json"
 # How far back to walk a file's history looking for the pinned commit.
 HISTORY_DEPTH = 30
+LOCK_TIMEOUT_SECONDS = 45
+REQUIRED_MUTABLE_FILES = ("references/learned-info.md",)
+
+
+def _lock_path(target: Path) -> Path:
+    """Return a stable per-target lock outside the replaceable skill bundle."""
+    identity = os.path.normcase(str(target.resolve())).encode("utf-8")
+    lock_dir = Path(tempfile.gettempdir()) / "buzz-skill-locks"
+    lock_dir.mkdir(mode=0o700, parents=True, exist_ok=True)
+    return lock_dir / f"{hashlib.sha256(identity).hexdigest()}.lock"
+
+
+@contextmanager
+def exclusive_file_lock(target: Path):
+    """Hold a portable inter-process lock while updating *target*.
+
+    The stable sidecar lives in the system temporary directory because locking the
+    target itself would stop protecting writers after ``os.replace`` swaps in a new
+    inode. The sidecar is intentionally retained for reuse.
+    """
+    lock_path = _lock_path(target)
+    handle = lock_path.open("a+b")
+    locked = False
+    try:
+        handle.seek(0, os.SEEK_END)
+        if handle.tell() == 0:
+            handle.write(b"\0")
+            handle.flush()
+
+        deadline = time.monotonic() + LOCK_TIMEOUT_SECONDS
+        if os.name == "nt":
+            import msvcrt
+
+            while True:
+                try:
+                    handle.seek(0)
+                    msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+                    locked = True
+                    break
+                except OSError:
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError(f"timed out locking {target}")
+                    time.sleep(0.05)
+        else:
+            import fcntl
+
+            while True:
+                try:
+                    fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+                    locked = True
+                    break
+                except BlockingIOError:
+                    if time.monotonic() >= deadline:
+                        raise TimeoutError(f"timed out locking {target}")
+                    time.sleep(0.05)
+
+        yield
+    finally:
+        if locked:
+            if os.name == "nt":
+                import msvcrt
+
+                handle.seek(0)
+                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+
+                fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+        handle.close()
 
 
 def _get(url: str):
@@ -81,7 +155,6 @@ def check_distribution(manifest: dict) -> int:
     changed" but "is the copy I am reading out of date with its canonical home".
     Returns 0 in sync, 1 drifted, 2 could not check.
     """
-    import hashlib
     d = manifest.get("distribution")
     if not d:
         print("no `distribution` block in watch.json — nothing to compare against")
@@ -92,6 +165,10 @@ def check_distribution(manifest: dict) -> int:
 
     drift, errors = [], []
     for rel in d["files"]:
+        if rel in REQUIRED_MUTABLE_FILES:
+            # Never compare mutable local knowledge by content, even if an older
+            # or hand-edited manifest accidentally lists it as immutable.
+            continue
         local = root / rel
         if not local.exists():
             errors.append(f"{rel}: missing locally"); continue
@@ -110,6 +187,27 @@ def check_distribution(manifest: dict) -> int:
         if blob != meta.get("sha"):
             drift.append(rel)
 
+    # The learning ledger is mutable local state, so require both bundle copies to
+    # contain it without comparing their contents or blob hashes.
+    for rel in REQUIRED_MUTABLE_FILES:
+        local = root / rel
+        if not local.is_file():
+            errors.append(f"{rel}: required mutable file missing locally")
+            continue
+        try:
+            _get(
+                f"{API}/repos/{repo}/contents/"
+                f"{urllib.parse.quote(f'{base}/{rel}')}?ref={branch}"
+            )
+        except urllib.error.HTTPError as exc:
+            errors.append(
+                f"{rel}: required mutable file HTTP {exc.code}"
+                + (" (not published yet)" if exc.code == 404 else "")
+            )
+        except (urllib.error.URLError, TimeoutError) as exc:
+            print(f"network error: {exc}", file=sys.stderr)
+            return 2
+
     for e in errors:
         print(f"  ! {e}")
     if drift:
@@ -126,11 +224,128 @@ def check_distribution(manifest: dict) -> int:
     return 0
 
 
+def _write_manifest(manifest: dict) -> None:
+    """Atomically replace watch.json while the caller holds its stable lock."""
+    body = json.dumps(manifest, indent=2) + "\n"
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(
+            "w", encoding="utf-8", dir=MANIFEST.parent, delete=False
+        ) as handle:
+            temp_path = Path(handle.name)
+            handle.write(body)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(temp_path, MANIFEST.stat().st_mode)
+        os.replace(temp_path, MANIFEST)
+        temp_path = None
+    finally:
+        if temp_path is not None:
+            temp_path.unlink(missing_ok=True)
+
+
+def acknowledge_path(args: argparse.Namespace) -> int:
+    """Advance exactly one pin after an agent reviewed the current file revision.
+
+    This is deliberately compare-and-swap: a stale maintenance turn cannot bless a
+    newer revision it did not review, and one acknowledgement cannot hide unrelated
+    drift elsewhere in the skill.
+    """
+    required = {
+        "--from-sha": args.from_sha,
+        "--reviewed-sha": args.reviewed_sha,
+        "--disposition": args.disposition,
+        "--note": args.note,
+    }
+    missing = [flag for flag, value in required.items() if not value]
+    if missing:
+        print(f"ack requires {', '.join(missing)}", file=sys.stderr)
+        return 2
+    if len(args.from_sha) < 12 or len(args.reviewed_sha) < 12:
+        print("ack SHAs must contain at least 12 hexadecimal characters", file=sys.stderr)
+        return 2
+    try:
+        int(args.from_sha, 16)
+        int(args.reviewed_sha, 16)
+    except ValueError:
+        print("ack SHAs must be hexadecimal", file=sys.stderr)
+        return 2
+    note = " ".join(args.note.split())
+    if len(note) < 12:
+        print("ack note must say what was reviewed (at least 12 characters)", file=sys.stderr)
+        return 2
+
+    try:
+        with exclusive_file_lock(MANIFEST):
+            # Re-read after acquiring the lock. Another maintenance process may
+            # have advanced this or another path while this process was waiting.
+            manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
+            matches = [
+                entry for entry in manifest["files"] if entry["path"] == args.ack
+            ]
+            if len(matches) != 1:
+                print(f"ack path is not watched exactly once: {args.ack}", file=sys.stderr)
+                return 2
+            entry = matches[0]
+            if entry["sha"] != args.from_sha[:12]:
+                print(
+                    f"compare-and-swap failed: manifest pins {entry['sha']}, "
+                    f"not {args.from_sha[:12]}",
+                    file=sys.stderr,
+                )
+                return 2
+
+            repo = manifest["repo"]
+            branch = manifest.get("branch", "main")
+            try:
+                commits = commits_for_path(repo, branch, entry["path"])
+            except urllib.error.HTTPError as exc:
+                print(f"cannot verify reviewed revision: HTTP {exc.code}", file=sys.stderr)
+                return 2
+            except (urllib.error.URLError, TimeoutError) as exc:
+                print(f"cannot verify reviewed revision: {exc}", file=sys.stderr)
+                return 2
+            if not commits:
+                print("cannot verify reviewed revision: no commits returned", file=sys.stderr)
+                return 2
+            latest = commits[0]["sha"]
+            if not latest.startswith(args.reviewed_sha):
+                print(
+                    "compare-and-swap failed: upstream moved after review; "
+                    f"latest is {latest[:12]}, reviewed {args.reviewed_sha[:12]}",
+                    file=sys.stderr,
+                )
+                return 2
+
+            old_pin = entry["sha"]
+            entry["sha"] = latest[:12]
+            manifest.setdefault("reviews", []).append(
+                {
+                    "date": date.today().isoformat(),
+                    "path": entry["path"],
+                    "from": old_pin,
+                    "to": latest[:12],
+                    "disposition": args.disposition,
+                    "note": note,
+                }
+            )
+            _write_manifest(manifest)
+    except (OSError, json.JSONDecodeError) as exc:
+        print(f"cannot update manifest: {exc}", file=sys.stderr)
+        return 2
+
+    print(
+        f"acknowledged {entry['path']}: {old_pin} -> {latest[:12]} "
+        f"({args.disposition})"
+    )
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--update", action="store_true",
-                    help="re-pin SHAs in watch.json (only after repairing SKILL.md)")
+                    help="disabled unsafe bulk re-pin; use --ack for one reviewed path")
     ap.add_argument("--verbose", "-v", action="store_true",
                     help="list unchanged files too")
     ap.add_argument("--skip-probes", action="store_true",
@@ -139,11 +354,37 @@ def main() -> int:
                     help="compare this skill against its published copy, and stop")
     ap.add_argument("--all", action="store_true",
                     help="run the upstream-drift check AND the repo comparison")
+    ap.add_argument("--ack", metavar="PATH",
+                    help="advance one watched path after reviewing its current revision")
+    ap.add_argument("--from-sha", help="current 12-character manifest pin")
+    ap.add_argument("--reviewed-sha", help="current upstream revision actually reviewed")
+    ap.add_argument(
+        "--disposition",
+        choices=("claims-updated", "no-relevant-change"),
+        help="whether canonical skill claims required edits",
+    )
+    ap.add_argument("--note", help="concise evidence/review note stored in watch.json")
     args = ap.parse_args()
+
+    if args.update:
+        print(
+            "--update is disabled because bulk re-pinning can hide unreviewed drift; "
+            "use --ack for one reviewed path at a time",
+            file=sys.stderr,
+        )
+        return 2
+
+    if args.ack:
+        return acknowledge_path(args)
+
+    stray_ack_args = (args.from_sha, args.reviewed_sha, args.disposition, args.note)
+    if any(stray_ack_args):
+        print("--from-sha/--reviewed-sha/--disposition/--note require --ack", file=sys.stderr)
+        return 2
 
     try:
         manifest = json.loads(MANIFEST.read_text(encoding="utf-8"))
-    except OSError as exc:
+    except (OSError, json.JSONDecodeError) as exc:
         print(f"cannot read manifest: {exc}", file=sys.stderr)
         return 2
 
@@ -241,26 +482,6 @@ def main() -> int:
         elif terms:
             print("absence probes: all clear ('What Buzz does not have' still holds)\n")
 
-    # ---- update ----------------------------------------------------------
-    if args.update:
-        if not drifted:
-            print("nothing to re-pin.")
-            return 0
-        for entry, _ in drifted:
-            entry["sha"] = entry.pop("_newest")[:12]
-        for entry in manifest["files"]:
-            entry.pop("_newest", None)
-        manifest["compiled_at"] = date.today().isoformat()
-        try:
-            manifest["head_at_compile"] = _get(
-                f"{API}/repos/{repo}/commits/{branch}")["sha"]
-        except Exception:
-            pass
-        MANIFEST.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
-        print(f"re-pinned {len(drifted)} file(s); compiled_at = {manifest['compiled_at']}")
-        print("now update SKILL.md Provenance to match.")
-        return 0
-
     if args.all:
         print()
         dist_rc = check_distribution(manifest)
@@ -268,12 +489,12 @@ def main() -> int:
         dist_rc = 0
 
     if not drifted and not errors and not probe_failures:
-        print("SKILL.md is current.")
+        print("Watched Buzz claims are current.")
         return dist_rc or 0
 
     if drifted or probe_failures:
         print("Repair: re-read each drifted file, fix the sections named above,")
-        print("then re-run with --update to re-pin.")
+        print("then acknowledge each reviewed path with the compare-and-swap --ack command.")
         return 1
     return 2
 

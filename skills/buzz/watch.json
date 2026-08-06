@@ -1,15 +1,33 @@
 {
   "repo": "block/buzz",
   "branch": "main",
-  "compiled_at": "2026-07-31",
-  "head_at_compile": "e5e5bac2a932b2b2e4eb6b559d5545a992c21b96",
-  "_comment": "Pinned last-commit SHA per watched file. Each file backs named SKILL.md sections; when a file drifts, re-read it and repair those sections. Run scripts/check_updates.py to compare against upstream, and --update to re-pin AFTER repairing the prose.",
+  "compiled_at": "2026-08-05",
+  "head_at_compile": "38bf642fcfa7a9fc1e06d6cf87d66ae94da29341",
+  "_comment": "Pinned last-commit SHA per curated upstream file or directory. Each path backs named canonical skill sections; when a path drifts, read the exact source and repair those sections. This is high-signal change detection, not a whole-repo proof. Run scripts/check_updates.py, then acknowledge each reviewed path with --ack. Unsafe bulk --update is disabled.",
   "files": [
     {
       "path": "crates/buzz-acp/README.md",
       "sha": "95fdf9788009",
       "backs": "The dispatch model (author gate, subscription, serialization, heartbeat, owner commands); Running it (harness config); Debugging",
       "priority": "critical"
+    },
+    {
+      "path": "crates/buzz-acp/src/lib.rs",
+      "sha": "4da7264d9070",
+      "backs": "The dispatch model; Debugging; comparison \u2014 owner/sibling author gate, DM hardening, fail-closed channel classification",
+      "priority": "critical"
+    },
+    {
+      "path": "crates/buzz-acp/src/config.rs",
+      "sha": "ad538bfb1e6b",
+      "backs": "Running it; Debugging \u2014 harness defaults, owner resolution input, runtime command and argument normalization",
+      "priority": "critical"
+    },
+    {
+      "path": "desktop/src-tauri/src/managed_agents/access_policy.rs",
+      "sha": "16cc3de6d6bb",
+      "backs": "The dispatch model; Running it \u2014 internal-build owner-only enforcement and same-owner sibling trust boundary",
+      "priority": "high"
     },
     {
       "path": "crates/buzz-auth/src/nip42.rs",
@@ -19,19 +37,25 @@
     },
     {
       "path": "crates/buzz-acp/src/base_prompt.md",
-      "sha": "7adc46268d5e",
+      "sha": "a1d78f2959b4",
       "backs": "Agent-facing surfaces \u2014 CLI command groups, mention rules",
       "priority": "high"
     },
     {
       "path": "crates/buzz-core/src/kind.rs",
-      "sha": "114d40d9d37f",
+      "sha": "067c085f37d9",
       "backs": "Event kinds; Git \u2014 kind numbers, SHARED_GATED_KINDS, persona privacy",
       "priority": "high"
     },
     {
+      "path": "docs/nips",
+      "sha": "067c085f37d9",
+      "backs": "Event kinds; Source map \u2014 Buzz NIP extensions including kind 30179 private managed-agent status",
+      "priority": "high"
+    },
+    {
       "path": "Justfile",
-      "sha": "61ba9dfaa008",
+      "sha": "16cc3de6d6bb",
       "backs": "Running it \u2014 mesh=1 recipes, setup/dev/relay, mesh-dev-fresh",
       "priority": "high"
     },
@@ -43,7 +67,7 @@
     },
     {
       "path": "crates/buzz-cli/src/lib.rs",
-      "sha": "262f2392e3b7",
+      "sha": "a1d78f2959b4",
       "backs": "Git \u2014 repos create/bind/protect, pr, messages send-diff flags",
       "priority": "medium"
     },
@@ -61,15 +85,27 @@
     },
     {
       "path": "README.md",
-      "sha": "052174a148f9",
+      "sha": "8d5afb606763",
       "backs": "Running it (quick start, packaged-build guidance); What Buzz does not have (maturity table)",
       "priority": "medium"
     },
     {
       "path": "desktop/src-tauri/tauri.conf.json",
-      "sha": "3a96acea09b4",
+      "sha": "a7ea86cdcf2a",
       "backs": "Running it \u2014 the bundled sidecar list proving packaged builds ship no relay",
       "priority": "medium"
+    },
+    {
+      "path": "desktop/src-tauri/tauri.windows.conf.json",
+      "sha": "6530b58a61d4",
+      "backs": "Running it \u2014 Windows packaged sidecar exclusions",
+      "priority": "medium"
+    },
+    {
+      "path": "desktop/src-tauri/build.rs",
+      "sha": "16cc3de6d6bb",
+      "backs": "Running it; Debugging \u2014 source-build relay URL behavior",
+      "priority": "high"
     },
     {
       "path": "crates/buzz-core/src/git_perms.rs",
@@ -84,9 +120,9 @@
       "priority": "low"
     },
     {
-      "path": "crates/buzz-persona/src/persona.rs",
-      "sha": "1580046b3c2c",
-      "backs": "Personas, teams, workflows \u2014 persona fields, respond_to_allowlist",
+      "path": "crates/buzz-persona/src",
+      "sha": "448baeef7704",
+      "backs": "Personas, teams, workflows; Source map \u2014 persona fields, resolution, validation, merge, pack, and manifest behavior",
       "priority": "low"
     },
     {
@@ -96,10 +132,58 @@
       "priority": "low"
     },
     {
-      "path": "crates/buzz-dev-mcp/src/lib.rs",
-      "sha": "5afa16157a63",
-      "backs": "Agent-facing surfaces \u2014 agent coding toolset",
+      "path": "crates/buzz-dev-mcp/src",
+      "sha": "18eef633d88a",
+      "backs": "Agent-facing surfaces; Source map \u2014 agent coding toolset",
       "priority": "low"
+    },
+    {
+      "path": "crates/buzz-agent/src/handoff.rs",
+      "sha": "ed4b3e7afafb",
+      "backs": "What Buzz has; Source map \u2014 context compaction behavior",
+      "priority": "low"
+    },
+    {
+      "path": "crates/buzz-agent/src/hints.rs",
+      "sha": "228122fddcc3",
+      "backs": "What Buzz has; Installing this skill; Source map \u2014 cross-runtime skill discovery",
+      "priority": "low"
+    },
+    {
+      "path": "crates/buzz-core/src/engram.rs",
+      "sha": "73cc31cc5283",
+      "backs": "What Buzz has; Source map \u2014 agent memory",
+      "priority": "low"
+    },
+    {
+      "path": "docs/spec",
+      "sha": "80e0ab16b03c",
+      "backs": "What Buzz has; Source map \u2014 formal verification artifacts",
+      "priority": "low"
+    },
+    {
+      "path": ".agents/skills",
+      "sha": "36d7dbd7cae4",
+      "backs": "Source map; Installing this skill \u2014 upstream skill layout examples",
+      "priority": "low"
+    },
+    {
+      "path": "examples/countdown-bot",
+      "sha": "79bcee55cb71",
+      "backs": "Source map \u2014 minimal agent example",
+      "priority": "low"
+    },
+    {
+      "path": "crates/buzz-auth/src/error.rs",
+      "sha": "14fba21e57b8",
+      "backs": "Debugging; Provenance \u2014 authentication error categories",
+      "priority": "medium"
+    },
+    {
+      "path": "docs/welcome-kickoff-silent-failures.md",
+      "sha": "284a76c1c7e7",
+      "backs": "Debugging \u2014 known silent-failure diagnostics",
+      "priority": "medium"
     },
     {
       "path": "crates/buzz-workflow/src/executor.rs",
@@ -109,13 +193,19 @@
     },
     {
       "path": "desktop/src-tauri/src/managed_agents/discovery/presets.rs",
-      "sha": "1b3ff96a5764",
+      "sha": "6c40ce394f86",
       "backs": "Mental model; Running it \u2014 the real preset runtime list (the ACP README is stale)",
       "priority": "high"
     },
     {
+      "path": "desktop/src-tauri/src/managed_agents/parallelism.rs",
+      "sha": "6c40ce394f86",
+      "backs": "Running it \u2014 Desktop-managed OpenClaw parallelism cap",
+      "priority": "high"
+    },
+    {
       "path": "desktop/src/features/agents/ui/agentConfigOptions.tsx",
-      "sha": "ab55fee81896",
+      "sha": "f865c0054b0a",
       "backs": "Agent-facing surfaces \u2014 per-runtime model options and which runtimes need credentials vs CLI OAuth",
       "priority": "high"
     }
@@ -130,14 +220,83 @@
     ]
   },
   "distribution": {
-    "_comment": "Canonical home of this skill. `check_updates.py --repo` compares the local copy against it, so an installed copy can tell when it is stale.",
+    "_comment": "Canonical home of this skill. `check_updates.py --repo` compares immutable bundle files against it. Mutable references/learned-info.md content is excluded so local learning does not create permanent distribution drift, but the checker still requires the file to exist.",
     "repo": "MahdiHedhli/skills",
     "branch": "main",
     "path": "skills/buzz",
     "files": [
       "SKILL.md",
       "watch.json",
-      "scripts/check_updates.py"
+      "scripts/check_updates.py",
+      "scripts/record_learning.py",
+      "references/expert-reference.md",
+      "references/maintenance.md"
     ]
-  }
+  },
+  "reviews": [
+    {
+      "date": "2026-08-05",
+      "path": "crates/buzz-acp/src/base_prompt.md",
+      "from": "7adc46268d5e",
+      "to": "a1d78f2959b4",
+      "disposition": "claims-updated",
+      "note": "Reviewed per-channel sessions and entity links; updated mental model and CLI guidance."
+    },
+    {
+      "date": "2026-08-05",
+      "path": "crates/buzz-core/src/kind.rs",
+      "from": "114d40d9d37f",
+      "to": "067c085f37d9",
+      "disposition": "claims-updated",
+      "note": "Reviewed kind 30621 and draft kind 30179; updated event and Git guidance."
+    },
+    {
+      "date": "2026-08-05",
+      "path": "Justfile",
+      "from": "61ba9dfaa008",
+      "to": "16cc3de6d6bb",
+      "disposition": "claims-updated",
+      "note": "Reviewed internal owner policy, Kubernetes sidecar, release mesh recipe, terminal, archive, and security deltas."
+    },
+    {
+      "date": "2026-08-05",
+      "path": "desktop/src-tauri/src/managed_agents/discovery/presets.rs",
+      "from": "1b3ff96a5764",
+      "to": "6c40ce394f86",
+      "disposition": "claims-updated",
+      "note": "Reviewed preset deltas and OpenClaw cap; updated runtime guidance."
+    },
+    {
+      "date": "2026-08-05",
+      "path": "desktop/src/features/agents/ui/agentConfigOptions.tsx",
+      "from": "ab55fee81896",
+      "to": "f865c0054b0a",
+      "disposition": "claims-updated",
+      "note": "Reviewed credential labels and UI-only animation delta; clarified provider credential names."
+    },
+    {
+      "date": "2026-08-05",
+      "path": "crates/buzz-cli/src/lib.rs",
+      "from": "262f2392e3b7",
+      "to": "a1d78f2959b4",
+      "disposition": "claims-updated",
+      "note": "Reviewed projects commands, auth-tag parsing, and entity-link module; updated CLI and Git guidance."
+    },
+    {
+      "date": "2026-08-05",
+      "path": "README.md",
+      "from": "052174a148f9",
+      "to": "8d5afb606763",
+      "disposition": "claims-updated",
+      "note": "Reviewed hosted Railway path and platform release assets; updated running guidance."
+    },
+    {
+      "date": "2026-08-05",
+      "path": "desktop/src-tauri/tauri.conf.json",
+      "from": "3a96acea09b4",
+      "to": "a7ea86cdcf2a",
+      "disposition": "claims-updated",
+      "note": "Reviewed sidecar, release churn, and CSP deltas; updated platform bundle guidance."
+    }
+  ]
 }

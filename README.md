@@ -58,24 +58,32 @@ a neutral, *different-lab* **pre-dispatch gate** that vets every Hermes `delegat
 ## buzz
 
 Working knowledge of [Buzz](https://github.com/block/buzz) — Block's self-hosted
-Nostr-relay platform where humans and AI agents share channels. Covers the parts you
-cannot learn from its README: the four gates that decide whether an agent answers,
-the real runtime preset list, event kinds, the model disk multiplier, and the failure
-modes that present as something else (a relay that dies *after* reporting healthy, a
-dev window stranded off-screen, a mesh download that hangs instead of erroring).
+Nostr-relay platform where humans and AI agents share channels. Covers the four
+dispatch gates, same-owner sibling trust, per-channel sessions, event kinds,
+personas and workflows, Git, shared compute, deployment, and the failure modes
+that present as something else.
 
-Written against a real deployment and marked accordingly — every claim is tagged
-verified-by-running, read-from-source, or explicitly unverified.
+The trigger file stays concise and routes topic-specific work into a detailed
+expert reference. Claims distinguish source-backed, empirically observed, and
+unverified behavior.
 
 Buzz ships fast, so the skill checks its own freshness:
 
 ```bash
-python3 scripts/check_updates.py          # has upstream Buzz drifted?
-python3 scripts/check_updates.py --repo   # is my copy stale vs this repo?
-python3 scripts/check_updates.py --all    # both
+python3 skills/buzz/scripts/check_updates.py          # has upstream Buzz drifted?
+python3 skills/buzz/scripts/check_updates.py --repo   # is my copy stale vs this repo?
+python3 skills/buzz/scripts/check_updates.py --all    # both
 ```
 
-It watches the 19 source files each claim rests on — not repo HEAD, which churns
-constantly — and names the sections to repair. It also re-runs the searches behind
-its own absence claims, and reports UNVERIFIED rather than passing when it cannot.
+It watches a curated manifest of high-signal source files and directories backing
+named canonical sections — not repo HEAD, which churns constantly. Drift starts a
+semantic repair loop: read the exact source and diff, update the canonical guidance,
+then acknowledge one reviewed path with a locked compare-and-swap pin. Unsafe bulk
+re-pinning is disabled.
 
+New evidence-backed observations have a durable channel in
+`skills/buzz/references/learned-info.md`, with a deduplicating recorder at
+`skills/buzz/scripts/record_learning.py`. Its content is excluded from immutable
+distribution comparison so local observations do not look like package drift; the
+checker still requires the ledger to exist. Back it up or merge it before manually
+replacing the bundle. A record is not canonical until a verified fact is promoted.
