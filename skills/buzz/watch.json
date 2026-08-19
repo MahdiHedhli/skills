@@ -38,7 +38,7 @@
     {
       "path": "crates/buzz-acp/src/base_prompt.md",
       "sha": "a1d78f2959b4",
-      "backs": "Agent-facing surfaces \u2014 CLI command groups, mention rules",
+      "backs": "Agent-facing surfaces \u2014 CLI command groups, mention rules; The harness publishes nothing the agent says (line 67 is the sole 'you MUST publish' instruction)",
       "priority": "high"
     },
     {
@@ -208,6 +208,24 @@
       "sha": "f865c0054b0a",
       "backs": "Agent-facing surfaces \u2014 per-runtime model options and which runtimes need credentials vs CLI OAuth",
       "priority": "high"
+    },
+    {
+      "path": "crates/buzz-acp/src/acp.rs",
+      "sha": "50a71137e6f1",
+      "backs": "Agent-facing surfaces (The harness publishes nothing the agent says); Engine choice decides whether a turn ever posts; Debugging \u2014 turn_emitted_text is a flag only, no publish path",
+      "priority": "critical"
+    },
+    {
+      "path": "crates/buzz-acp/src/pool.rs",
+      "sha": "50a71137e6f1",
+      "backs": "Agent-facing surfaces (The harness publishes nothing the agent says); Engine choice decides whether a turn ever posts; Debugging \u2014 ack reaction add/remove and turn metrics are the only kinds the harness emits",
+      "priority": "high"
+    },
+    {
+      "path": "crates/buzz-acp/src/relay.rs",
+      "sha": "54f11219efe6",
+      "backs": "Agent-facing surfaces \u2014 typing indicator (20002) is ephemeral",
+      "priority": "medium"
     }
   ],
   "absence_probes": {

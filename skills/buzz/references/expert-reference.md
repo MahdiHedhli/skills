@@ -301,6 +301,26 @@ must ignore unknown fields. Encryption fails closed on negative/non-finite `cost
 
 ## Agent-facing surfaces
 
+### The harness publishes nothing the agent says
+
+**Agent reply text never reaches a channel.** `buzz-acp` consumes
+`agent_message_chunk` only to set a flag (`acp.rs:144` `turn_emitted_text`,
+written at `acp.rs:1753`); no code path turns that text into a message. Every
+`Kind::Custom(9)` construction in the crate is a test fixture. On its own behalf
+the harness publishes just three things:
+
+| Kind | What | Where |
+|---|---|---|
+| 20002 | typing indicator (ephemeral) | `relay.rs:855` `build_typing_event` |
+| 7, then 5 | ack reaction, then its NIP-09 removal | `pool.rs:3883`, `pool.rs:3931` |
+| 44200 | turn metrics | `pool.rs:3681` `publish_agent_turn_metric` |
+
+So **an agent speaks only by executing `buzz messages send`.** Composing an answer
+and sending one are separate acts and only the second is visible. The base prompt
+does say so — `base_prompt.md:67`, "If your turn produced anything worth knowing,
+you MUST publish it" — but says it once, mid-list, in a long prompt, and not every
+runtime acts on it. See *Engine choice decides whether a turn ever posts*.
+
 ### `buzz` CLI — JSON in, JSON out
 Auth env: `BUZZ_RELAY_URL`, `BUZZ_PRIVATE_KEY`, `BUZZ_AUTH_TAG`.
 Exit codes: `0` ok · `1` user error · `2` network · `3` auth · `4` other.
@@ -833,6 +853,32 @@ export BUZZ_ACP_AGENT_COMMAND="claude-agent-acp"
 buzz-acp
 ```
 
+### Engine choice decides whether a turn ever posts
+
+Swapping `BUZZ_ACP_AGENT_COMMAND` is not a like-for-like substitution. Gates,
+relay and CLI are identical across runtimes; what differs is whether the runtime
+infers that *answering* requires *running a command*. Because posting is a tool
+call, a runtime that answers conversationally ends the turn with
+`stopReason: end_turn` and `outcome="ok"` having published nothing.
+
+Observed on one seat — same brief, same channel, same working directory, one job:
+
+| Runtime | Tool calls in a normal chat turn | Reached the channel |
+|---|---|---|
+| `grok` 1.0.5, `claude-agent-acp` 0.69.0 | 28 | yes |
+| `codex-acp` 1.4.0 (`codex-cli` 0.147.0) | **0** | no — prose only |
+
+This is not a capability limit and not sandbox trust: the same codex build made
+tool calls in **both** a trusted and an untrusted working directory when the prompt
+said explicitly to run a command. Restating the posting requirement imperatively at
+the top of the seat's own `AGENTS.md` / `CLAUDE.md` — naming the exact command —
+took it from 0 tool calls to 16 on the same prompt shape.
+
+**Put the posting mechanism in the seat's project brief, not only in the base
+prompt, and re-verify after every engine change.** Nothing errors when a runtime
+gets this wrong: it reports success and bills a full turn, which is what makes the
+failure expensive rather than merely annoying.
+
 ### Full harness config
 | Var | Default | Notes |
 |---|---|---|
@@ -888,6 +934,13 @@ Walk the gates **in order** — the cause is almost always gate 1 or 2:
 7. **Burst on startup?** Expected — that's mention replay since the last run.
 8. **Codex `426 Upgrade Required` in logs?** Expected and non-fatal — `codex-acp`
    tries a ChatGPT WebSocket login first and falls back to `OPENAI_API_KEY`.
+
+9. **Turn ended `outcome="ok"` but nothing was posted?** Not a gate failure — the
+   runtime never ran `buzz messages send`. Channel signature: ack reaction appears,
+   typing indicator runs, the reaction is deleted (kind 5), and no kind 9 lands.
+   Confirm with `RUST_LOG=buzz_acp=trace`: non-empty `agent_message_chunk` text plus
+   **zero tool calls** means the runtime answered into the void. Repair the seat
+   brief, not the harness — see *Engine choice decides whether a turn ever posts*.
 
 See also `docs/welcome-kickoff-silent-failures.md`.
 
@@ -1080,6 +1133,9 @@ it backs, so a drift report names the repairs directly:
 | critical | `crates/buzz-acp/src/config.rs` | harness defaults, owner and runtime configuration |
 | critical | `crates/buzz-auth/src/nip42.rs` | *Debugging* — the four auth rejection reasons |
 | high | `crates/buzz-acp/src/base_prompt.md` | *Agent-facing surfaces* |
+| critical | `crates/buzz-acp/src/acp.rs` | *Agent-facing surfaces* (no publish path for agent text), *Debugging* |
+| high | `crates/buzz-acp/src/pool.rs` | *Agent-facing surfaces* (the only kinds the harness emits) |
+| medium | `crates/buzz-acp/src/relay.rs` | *Agent-facing surfaces* (typing indicator is ephemeral) |
 | high | `crates/buzz-core/src/kind.rs` | *Event kinds*, *Git* |
 | high | `docs/nips/` | *Event kinds* — Buzz NIP extensions and private managed-agent status |
 | high | `Justfile` | *Running it* — `mesh=1` recipes |
@@ -1215,8 +1271,13 @@ inferred:
   `failed inference readiness`.
 - `gemma-4-E4B` reports as **7.5B / 131k context** — the "E4B" label understates it
 
-**Not verified by running:** the Fizz channel-reply proof (the harness path, as
-opposed to raw model serving) and the `deploy/compose` production bundle. Note that
+**Harness reply path verified in production (2026-08-18)** — a four-seat headless
+deployment on a self-hosted relay, driven across `grok`, `claude-agent-acp`,
+`codex-acp` and `agy-acp`. This supplies *The harness publishes nothing the agent
+says* and *Engine choice decides whether a turn ever posts*: event kinds observed on
+the relay, tool-call counts from `RUST_LOG=buzz_acp=trace`.
+
+**Not verified by running:** the `deploy/compose` production bundle. Note that
 a working `/v1/chat/completions` proves *serving only* — Buzz's own runbook is
 explicit that it does not prove harness wiring or provider inheritance.
 

@@ -78,3 +78,27 @@ new or narrow for the canonical guidance.
 - Evidence: Read current externalBin lists and desktop-release-build --features mesh-llm recipe; reconciled the historical artifact observation.
 - Finding: macOS/Linux Desktop bundles buzz-backend-kubernetes while Windows excludes it; no package contains the relay. The current release recipe compiles mesh-llm even though a previously tested artifact lacked it.
 - Canonical target: Running it; Provenance
+
+<!-- buzz-learning:75a2ab4f3d5c -->
+### 2026-08-18 — The harness publishes no agent text; agents speak only via the CLI
+
+- ID: `75a2ab4f3d5c`
+- Area: harness
+- Status: promoted
+- Confidence: source-verified
+- Source: block/buzz@50a71137e6f1:crates/buzz-acp/src/acp.rs; block/buzz@50a71137e6f1:crates/buzz-acp/src/pool.rs; block/buzz@54f11219efe6:crates/buzz-acp/src/relay.rs; crates/buzz-acp/src/base_prompt.md
+- Evidence: Read acp.rs:144/1753 (turn_emitted_text is a flag with no publish path), relay.rs:855 build_typing_event, pool.rs:3883/3931 reaction add and build_remove_reaction, pool.rs:3681 publish_agent_turn_metric; grepped every Kind::Custom(9) site and confirmed all are in test modules.
+- Finding: buzz-acp never turns agent output into a channel message. agent_message_chunk is consumed only to set the turn_emitted_text flag, and every Kind::Custom(9) construction in the crate is a test fixture. The harness publishes on its own behalf only the ephemeral typing indicator (20002), the ack reaction and its NIP-09 removal (7 then 5), and turn metrics (44200). An agent becomes visible only by executing 'buzz messages send'. base_prompt.md states this requirement once, mid-list.
+- Canonical target: Agent-facing surfaces; Debugging
+
+<!-- buzz-learning:7d6a8f660ccf -->
+### 2026-08-18 — Engine choice decides whether a turn ever posts
+
+- ID: `7d6a8f660ccf`
+- Area: harness
+- Status: promoted
+- Confidence: observed
+- Source: Reproduced on a four-seat headless buzz-acp deployment, 2026-08-18; RUST_LOG=buzz_acp=trace session/prompt traces
+- Evidence: Compared tool-call counts per turn across engines on one job; channel showed ack reaction, typing indicator, kind-5 reaction removal and no kind 9 for every codex turn; direct ACP drive of codex-acp with an explicit shell instruction returned tool_call plus tool_call_update in both a trusted and an untrusted cwd.
+- Finding: Swapping BUZZ_ACP_AGENT_COMMAND is not like-for-like. Because posting requires a tool call, an engine that answers conversationally completes the turn with stopReason end_turn and outcome ok while publishing nothing. Observed on one seat with identical brief, channel and working directory: grok 1.0.5 and claude-agent-acp 0.69.0 made 28 tool calls and posted; codex-acp 1.4.0 (codex-cli 0.147.0) made 0 and posted nothing. It is not a capability or sandbox-trust limit — the same codex build made tool calls in both trusted and untrusted working directories when told explicitly to run a command, and restating the posting requirement imperatively at the top of the seat's own AGENTS.md/CLAUDE.md moved it from 0 tool calls to 16 on the same prompt shape. Put the posting mechanism in the seat brief, not only in the base prompt.
+- Canonical target: Running it (Full harness config); Debugging

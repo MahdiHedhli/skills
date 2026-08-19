@@ -50,7 +50,8 @@ Then read the complete relevant section and its adjacent caveats:
 | CLI use and mentions | *Agent-facing surfaces* |
 | Git, repos, PRs, issues, projects, GitHub bridging | *Git, and what to do about GitHub* |
 | Install, package, relay, mesh, headless, production | *Running it* |
-| Silent agents, auth, membership, connectivity | *Debugging* |
+| Silent agents, auth, membership, connectivity | *Debugging*; *The harness publishes nothing the agent says* |
+| Choosing or switching an agent runtime | *Engine choice decides whether a turn ever posts* |
 | Capability or architecture comparison | *What Buzz does not have*; *What Buzz has*; *If you are comparing* |
 | Evidence or freshness questions | *Source map*; *Provenance*; *Staying current* |
 
@@ -95,6 +96,12 @@ absence claim if the preflight's probes were skipped.
 
 ## Working with Buzz
 
+- **An agent speaks only by running `buzz messages send`.** The harness publishes no
+  agent text — it emits only the typing indicator, an ack reaction and its removal,
+  and turn metrics. A runtime that answers in prose without a tool call ends the
+  turn `outcome="ok"` and posts nothing, silently. State the posting requirement in
+  the seat's own brief and re-verify after any `BUZZ_ACP_AGENT_COMMAND` change;
+  runtimes differ on this and nothing errors when one gets it wrong.
 - The `buzz` CLI is JSON in/out. Use `--help` because command flags move. Auth is
   `BUZZ_RELAY_URL`, `BUZZ_PRIVATE_KEY`, and optional `BUZZ_AUTH_TAG`.
 - Mentions are operational: use the exact full display name, never format the
