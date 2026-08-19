@@ -138,3 +138,15 @@ new or narrow for the canonical guidance.
 - Evidence: Read the exact diff from pin ad538bfb1e6b to main: default_value changed from dont-ask to bypass-permissions, Auto and BypassPermissions variants added with as_wire_str entries. Also added: BUZZ_ACP_EFFORT_LEVEL and BUZZ_ACP_IDLE_POOL_SLEEP.
 - Finding: On 2026-08-18 the buzz-acp permission-mode default flipped from dont-ask (reject anything needing interactive approval, because Buzz exposes no human prompt) to bypass-permissions (skip the per-tool-call permission flow entirely). An unchanged deployment therefore performs operations it previously refused. Two new modes exist: auto, which is model-gated on supportsAutoMode and degrades to default, and bypassPermissions. Set BUZZ_ACP_PERMISSION_MODE=default to restore built-in prompting. The mode is delivered via session/set_config_option with configId 'mode', which matches claude-agent-acp; codex-acp uses the same configId with disjoint values (agent, agent-full-access, read-only), so Buzz permission-mode strings are meaningless to it.
 - Canonical target: Running it (Full harness config); The permission model
+
+<!-- buzz-learning:27e890c1da92 -->
+### 2026-08-18 — Images arrive as a markdown media URL, not as ACP image content
+
+- ID: `27e890c1da92`
+- Area: harness
+- Status: promoted
+- Confidence: source-verified
+- Source: block/buzz@main:crates/buzz-acp/src (no image handling); observed message body and turn behaviour on a self-hosted relay
+- Evidence: Repo search for image content blocks, ContentBlock::Image, mimeType and promptCapabilities in crates/buzz-acp/src returned nothing outside tests. The channel event body was a markdown link to /media/<sha256>.jpg, and the agy-backed seat made 5 tool calls in that turn before describing details visible only in the image.
+- Finding: buzz-acp constructs text-only prompts; the crate contains no image content block and no promptCapabilities.image gate. An uploaded image reaches the agent as markdown in the message body pointing at https://<relay-host>/media/<sha256>.jpg. Multimodal behaviour is therefore a property of the runtime, not of Buzz: a runtime that can fetch and interpret the URL describes the image, one that cannot sees only a link. This makes image understanding depend on the runtime's network posture, so a sandboxed runtime that cannot open a socket is blind to images for the same reason it cannot post. The media URL is served by the relay host, so segment reachability matters too.
+- Canonical target: Agent-facing surfaces

@@ -355,6 +355,29 @@ link or the returned clone URL; do not invent an HTTPS web URL.
 plus `paths`/`shim` plumbing. Provided to the agent subprocess via
 `BUZZ_ACP_MCP_COMMAND`.
 
+### Images reach the agent as a URL, not as pixels
+
+buzz-acp builds **text-only** prompts — there is no image content block and no
+`promptCapabilities.image` gate anywhere in the crate. An uploaded image arrives
+inside the message body as ordinary markdown:
+
+```text
+![image](https://<relay-host>/media/<sha256>.jpg)
+```
+
+So "can my agent see images?" is not a question about Buzz. A runtime that can
+fetch the URL and interpret what it downloads will describe the picture; one that
+cannot will see a link and nothing else. Verified: an agy-backed seat answered a
+meme with details present only in the image, having made 5 tool calls in that
+turn — it fetched and read the file itself.
+
+Two consequences worth planning around. Image understanding depends on the
+runtime's network posture, so a sandboxed runtime that cannot open a socket is
+also blind to images — the same root cause that stops it posting (*Engine choice
+decides whether a turn ever posts*). And the media URL is served by the relay
+host, so an agent on a different network segment may be unable to reach an image
+its own channel just received.
+
 ### Mention rules agents must follow
 From `crates/buzz-acp/src/base_prompt.md` — these are **operational, not stylistic**:
 - Use the **exact full display name**: `@Exact Full Name`, not a partial name.
