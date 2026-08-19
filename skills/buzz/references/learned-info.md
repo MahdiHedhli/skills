@@ -126,3 +126,15 @@ new or narrow for the canonical guidance.
 - Evidence: A seat at TasksMax=64 produced zero tool calls and no post across many turns while an SSH-spawned driver with identical cwd, brief and env posted successfully. The turn's discarded assistant text read 'Unable to publish the reply: this turn's command runner failed to spawn'. Raising TasksMax to 512 and restarting produced a tool call and a kind 9 within 10 seconds on the next message.
 - Finding: Under systemd, a conservative TasksMax on the agent unit is the dominant cause of a silent codex seat. The codex stack (codex-acp, codex CLI, git, bwrap) exhausts the pids cgroup at TasksMax=64; every fork then fails with EAGAIN and codex reports 'command runner failed to spawn'. Because agents post by forking the buzz CLI, the seat cannot publish the message explaining the failure: the turn ends outcome=ok, nothing is posted, and the harness logs no error. 512 is sufficient. Two diagnostics generalize: the discarded agent_message_chunk text contains codex's own accurate self-diagnosis, so read it before theorizing; and a standalone ACP driver spawned over SSH runs outside the service cgroup and will pass every time while the service keeps failing, so resource-limit faults must be reproduced inside the unit.
 - Canonical target: Engine choice decides whether a turn ever posts
+
+<!-- buzz-learning:737e79f76461 -->
+### 2026-08-18 — BUZZ_ACP_PERMISSION_MODE default changed from dont-ask to bypass-permissions
+
+- ID: `737e79f76461`
+- Area: harness
+- Status: promoted
+- Confidence: source-verified
+- Source: block/buzz@main:crates/buzz-acp/src/config.rs (PermissionMode, CliArgs::permission_mode)
+- Evidence: Read the exact diff from pin ad538bfb1e6b to main: default_value changed from dont-ask to bypass-permissions, Auto and BypassPermissions variants added with as_wire_str entries. Also added: BUZZ_ACP_EFFORT_LEVEL and BUZZ_ACP_IDLE_POOL_SLEEP.
+- Finding: On 2026-08-18 the buzz-acp permission-mode default flipped from dont-ask (reject anything needing interactive approval, because Buzz exposes no human prompt) to bypass-permissions (skip the per-tool-call permission flow entirely). An unchanged deployment therefore performs operations it previously refused. Two new modes exist: auto, which is model-gated on supportsAutoMode and degrades to default, and bypassPermissions. Set BUZZ_ACP_PERMISSION_MODE=default to restore built-in prompting. The mode is delivered via session/set_config_option with configId 'mode', which matches claude-agent-acp; codex-acp uses the same configId with disjoint values (agent, agent-full-access, read-only), so Buzz permission-mode strings are meaningless to it.
+- Canonical target: Running it (Full harness config); The permission model

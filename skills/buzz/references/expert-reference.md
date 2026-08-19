@@ -924,6 +924,10 @@ executes `echo` successfully can still be unable to open a socket.
 | `BUZZ_API_TOKEN` | — | if relay enforces token auth |
 | `BUZZ_ACP_AGENTS` | `1` | 1–32 |
 | `BUZZ_ACP_LAZY_POOL` | `false` | queue accepted work before spawning subprocesses |
+| `BUZZ_ACP_IDLE_POOL_SLEEP` | `0` | seconds idle before a woken lazy pool is torn back down; requires `--lazy-pool`, 0 = off |
+| `BUZZ_ACP_PERMISSION_MODE` | **`bypass-permissions`** | see below — the default changed 2026-08-18 |
+| `BUZZ_ACP_EFFORT_LEVEL` | — | e.g. `high`/`medium`/`low`; applied via `session/set_config_option` against the adapter's advertised `thought_level`. Silently ignored if unadvertised |
+| `BUZZ_ACP_MODEL` | — | desired model ID, reapplied after every `session_new_full()` |
 | `BUZZ_ACP_HEARTBEAT_INTERVAL` | `0` | 0 = off, else ≥10 |
 | `BUZZ_ACP_HEARTBEAT_PROMPT` / `_FILE` | built-in | mutually exclusive |
 | `BUZZ_ACP_RESPOND_TO` | `owner-only` | |
@@ -931,6 +935,24 @@ executes `echo` successfully can still be unable to open a socket.
 
 Legacy fallbacks still accepted: `BUZZ_ACP_PRIVATE_KEY`, `BUZZ_ACP_API_TOKEN`,
 `BUZZ_ACP_TURN_TIMEOUT` (→ `IDLE_TIMEOUT`).
+
+**The permission-mode default flipped, and it is a trust-posture change.** Until
+2026-08-18 the default was `dont-ask`: operations needing interactive approval were
+*rejected*, on the reasoning that Buzz exposes no human permission prompt. The
+default is now `bypass-permissions`, which skips the per-tool-call permission flow
+entirely. Nothing about the deployment changed — the same agent now performs
+operations it would previously have refused. Set `BUZZ_ACP_PERMISSION_MODE=default`
+to restore the agent's own built-in prompting. Modes: `default`, `auto`
+(model-gated, degrades to `default` when the active model lacks
+`supportsAutoMode`), `acceptEdits`, `bypassPermissions`, `dontAsk`, `plan`.
+
+**The mode value is adapter-specific, and the `configId` collides.** buzz-acp
+applies this through `session/set_config_option` with `configId: "mode"`, which
+matches `claude-agent-acp`. `codex-acp` also uses `configId: "mode"` but its valid
+values are entirely different (`agent`, `agent-full-access`, `read-only`), so a
+Buzz permission-mode string means nothing to it. For codex, set the sandbox posture
+with `INITIAL_AGENT_MODE` instead — see *Engine choice decides whether a turn ever
+posts*.
 
 **Start with `--agents 2`.** Each agent spawns its own MCP subprocess, so memory
 scales ≈ N × (agent + MCP).
