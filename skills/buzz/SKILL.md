@@ -117,7 +117,9 @@ absence claim if the preflight's probes were skipped.
 - `buzz repos create`, `buzz issues create`, and `buzz pr open` return canonical
   `buzz://` links. Share them verbatim; do not invent an HTTPS URL for a
   Buzz-hosted repository.
-- Workflows are trigger/action automation, not turn arbitration. Personas define
+- Workflows are trigger/action automation, not turn arbitration. Their messages are
+  signed by the relay, so waking an agent depends on the harness attributing the
+  workflow's owner and on it having resolved the relay's own pubkey at startup. Personas define
   agents, not per-room roles or task ownership.
 - Buzz is its own NIP-34 Git forge. It does not synchronize GitHub. Announce a
   GitHub repository, post diffs, or transform GitHub webhooks into flat workflow

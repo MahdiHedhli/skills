@@ -150,3 +150,27 @@ new or narrow for the canonical guidance.
 - Evidence: Repo search for image content blocks, ContentBlock::Image, mimeType and promptCapabilities in crates/buzz-acp/src returned nothing outside tests. The channel event body was a markdown link to /media/<sha256>.jpg, and the agy-backed seat made 5 tool calls in that turn before describing details visible only in the image.
 - Finding: buzz-acp constructs text-only prompts; the crate contains no image content block and no promptCapabilities.image gate. An uploaded image reaches the agent as markdown in the message body pointing at https://<relay-host>/media/<sha256>.jpg. Multimodal behaviour is therefore a property of the runtime, not of Buzz: a runtime that can fetch and interpret the URL describes the image, one that cannot sees only a link. This makes image understanding depend on the runtime's network posture, so a sandboxed runtime that cannot open a socket is blind to images for the same reason it cannot post. The media URL is served by the relay host, so segment reachability matters too.
 - Canonical target: Agent-facing surfaces
+
+<!-- buzz-learning:0fcb32604a1d -->
+### 2026-08-19 — Workflow messages are relay-signed and were dropped by the author gate
+
+- ID: `0fcb32604a1d`
+- Area: harness
+- Status: promoted
+- Confidence: source-verified
+- Source: block/buzz@54f11219efe6:crates/buzz-acp/src/lib.rs (#6129)
+- Evidence: Read the commit message root-cause analysis and the patch: fetch_relay_self at startup with the warning branch, the author binding switched to workflow_attributed_author, and the function's kind and relay-pubkey guards.
+- Finding: A workflow send_message action is signed with the relay keypair, so event.pubkey is the relay rather than the workflow owner. buzz-acp runs the inbound author gate before the p-tag mention check, so under the default owner-only every scheduled-workflow wake-up was silently dropped and workflows could not wake agents at all before 2026-08-17. workflow_attributed_author() now reattributes exactly one shape: a KIND_STREAM_MESSAGE event authored by the relay's own pubkey and carrying buzz:workflow tag markers; the gate evaluates that attributed author instead. It depends on resolving the relay's own pubkey over NIP-11 at startup, and when that fetch fails the harness logs 'relay self pubkey unavailable ... relay-signed workflow messages will be dropped by the author gate' once and then silently fails every workflow wake-up.
+- Canonical target: The dispatch model (Gate 2); Debugging; Personas, teams, workflows
+
+<!-- buzz-learning:f0c8ad7c58cc -->
+### 2026-08-19 — Base prompt dropped Startup Recovery, so nothing points a runtime at an on-disk brief
+
+- ID: `f0c8ad7c58cc`
+- Area: harness
+- Status: promoted
+- Confidence: source-verified
+- Source: block/buzz@main:crates/buzz-acp/src/base_prompt.md (#6161, #6186, #5875, #5792)
+- Evidence: Read the pin..main patch: the Startup Recovery block including the AGENTS.md line is deleted; issues table row gains assign; projects create added to the deep-link sentence; pickup follow-through rewritten. Confirmed 'MUST publish' now at line 78 of the current file.
+- Finding: The base prompt's Startup Recovery section was removed on 2026-08-17 (#6161). It had instructed agents to run buzz feed get, catch up on channel history, and check AGENTS.md in the working directory for team context. No remaining prompt text points a runtime at an on-disk brief, so whether a seat brief is read depends entirely on the runtime's own instruction-file convention. Provide every convention name as a symlink to one file. Also in this window: buzz issues gained an assign subcommand, buzz projects create now returns a buzz:// link, and the mention rule was reworded to the exact display name as shown in Buzz. The 'you MUST publish it' instruction survives and is now at line 78.
+- Canonical target: Agent-facing surfaces; Engine choice decides whether a turn ever posts
