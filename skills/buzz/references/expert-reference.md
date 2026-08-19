@@ -857,27 +857,39 @@ buzz-acp
 
 Swapping `BUZZ_ACP_AGENT_COMMAND` is not a like-for-like substitution. Gates,
 relay and CLI are identical across runtimes; what differs is whether the runtime
-infers that *answering* requires *running a command*. Because posting is a tool
-call, a runtime that answers conversationally ends the turn with
-`stopReason: end_turn` and `outcome="ok"` having published nothing.
+(a) reads the seat brief and (b) *lets the brief's command reach the network*.
+Because posting is a tool call over HTTP, either failure ends the turn with
+`stopReason: end_turn` / `outcome="ok"` having published nothing.
 
-Observed on one seat — same brief, same channel, same working directory, one job:
+`codex-acp` 1.4.0 fails **both** ways out of the box, and neither is a capability
+limit. Observed on one seat, same brief, same channel, same job — `grok` 1.0.5 and
+`claude-agent-acp` 0.69.0 posted; codex made 0 tool calls, then made tool calls
+that all failed:
 
-| Runtime | Tool calls in a normal chat turn | Reached the channel |
-|---|---|---|
-| `grok` 1.0.5, `claude-agent-acp` 0.69.0 | 28 | yes |
-| `codex-acp` 1.4.0 (`codex-cli` 0.147.0) | **0** | no — prose only |
+1. **It never read the brief.** Codex's instruction-file convention is
+   `AGENTS.md`; a brief written as `CLAUDE.md` is invisible to it. Symlink or
+   duplicate the file. Until then codex answers from the base prompt alone — the
+   observed turn was 45 output tokens of prose, 0 tool calls.
+2. **Its sandbox blocks the network.** `codex-acp` defines its own ACP agent modes
+   and **ignores `sandbox_mode` in `~/.codex/config.toml`** (the string does not
+   appear in `dist/index.js`). `DEFAULT_AGENT_MODE` is `agent` →
+   `{type:"workspaceWrite", networkAccess:false}`. The CLI then dies with
+   `Temporary failure in name resolution`, or — once the host resolves from
+   `/etc/hosts` — `tcp open error: Operation not permitted (os error 1)`.
+   Project `trust_level` does not change this.
 
-This is not a capability limit and not sandbox trust: the same codex build made
-tool calls in **both** a trusted and an untrusted working directory when the prompt
-said explicitly to run a command. Restating the posting requirement imperatively at
-the top of the seat's own `AGENTS.md` / `CLAUDE.md` — naming the exact command —
-took it from 0 tool calls to 16 on the same prompt shape.
+   Fix: `INITIAL_AGENT_MODE=agent-full-access` in the harness environment. That is
+   the only documented hook — `AgentMode.getInitialAgentMode()` reads exactly that
+   variable and falls back to the network-denied default. It is inert for other
+   runtimes, so set it unconditionally on any seat that may be switched to codex.
 
-**Put the posting mechanism in the seat's project brief, not only in the base
-prompt, and re-verify after every engine change.** Nothing errors when a runtime
-gets this wrong: it reports success and bills a full turn, which is what makes the
-failure expensive rather than merely annoying.
+With both applied, the same codex build posts: `{"accepted":true,"event_id":...}`,
+`exit_code: 0`.
+
+The general rule: **an engine swap changes the sandbox policy your tools run
+under, not just the model.** Verify a real post lands after every switch — an
+`outcome="ok"` turn and a typing indicator prove nothing, and a runtime that
+executes `echo` successfully can still be unable to open a socket.
 
 ### Full harness config
 | Var | Default | Notes |

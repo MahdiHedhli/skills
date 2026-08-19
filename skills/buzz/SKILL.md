@@ -100,8 +100,11 @@ absence claim if the preflight's probes were skipped.
   agent text — it emits only the typing indicator, an ack reaction and its removal,
   and turn metrics. A runtime that answers in prose without a tool call ends the
   turn `outcome="ok"` and posts nothing, silently. State the posting requirement in
-  the seat's own brief and re-verify after any `BUZZ_ACP_AGENT_COMMAND` change;
-  runtimes differ on this and nothing errors when one gets it wrong.
+  the seat's own brief and re-verify a real post lands after any
+  `BUZZ_ACP_AGENT_COMMAND` change. An engine swap changes the sandbox policy your
+  tools run under, not just the model: `codex-acp` reads `AGENTS.md` (not
+  `CLAUDE.md`) and defaults to an ACP mode with `networkAccess:false`, ignoring
+  `config.toml`'s `sandbox_mode` — set `INITIAL_AGENT_MODE=agent-full-access`.
 - The `buzz` CLI is JSON in/out. Use `--help` because command flags move. Auth is
   `BUZZ_RELAY_URL`, `BUZZ_PRIVATE_KEY`, and optional `BUZZ_AUTH_TAG`.
 - Mentions are operational: use the exact full display name, never format the

@@ -102,3 +102,15 @@ new or narrow for the canonical guidance.
 - Evidence: Compared tool-call counts per turn across engines on one job; channel showed ack reaction, typing indicator, kind-5 reaction removal and no kind 9 for every codex turn; direct ACP drive of codex-acp with an explicit shell instruction returned tool_call plus tool_call_update in both a trusted and an untrusted cwd.
 - Finding: Swapping BUZZ_ACP_AGENT_COMMAND is not like-for-like. Because posting requires a tool call, an engine that answers conversationally completes the turn with stopReason end_turn and outcome ok while publishing nothing. Observed on one seat with identical brief, channel and working directory: grok 1.0.5 and claude-agent-acp 0.69.0 made 28 tool calls and posted; codex-acp 1.4.0 (codex-cli 0.147.0) made 0 and posted nothing. It is not a capability or sandbox-trust limit — the same codex build made tool calls in both trusted and untrusted working directories when told explicitly to run a command, and restating the posting requirement imperatively at the top of the seat's own AGENTS.md/CLAUDE.md moved it from 0 tool calls to 16 on the same prompt shape. Put the posting mechanism in the seat brief, not only in the base prompt.
 - Canonical target: Running it (Full harness config); Debugging
+
+<!-- buzz-learning:5aee048c6719 -->
+### 2026-08-18 — codex-acp ignores config.toml sandbox_mode and defaults to networkAccess false
+
+- ID: `5aee048c6719`
+- Area: harness
+- Status: promoted
+- Confidence: source-verified
+- Source: @agentclientprotocol/codex-acp@1.4.0 dist/index.js (AgentMode, getInitialAgentMode)
+- Evidence: Read the AgentMode class definitions and getInitialAgentMode; confirmed the literal sandbox_mode never appears in the bundle. Reproduced the send failing with both error strings, then succeeding with accepted:true and exit_code 0 once INITIAL_AGENT_MODE=agent-full-access was set.
+- Finding: codex-acp defines its own ACP agent modes in dist/index.js and never reads sandbox_mode from ~/.codex/config.toml. DEFAULT_AGENT_MODE is 'agent' with {type:workspaceWrite, networkAccess:false}, so any tool call that opens a socket fails — first as 'Temporary failure in name resolution', then as 'tcp open error: Operation not permitted (os error 1)' once the name resolves from /etc/hosts. Project trust_level does not affect it. AgentMode.getInitialAgentMode() reads the INITIAL_AGENT_MODE environment variable and falls back to that default, so INITIAL_AGENT_MODE=agent-full-access is the fix; it is inert for other runtimes. Separately, codex reads AGENTS.md and not CLAUDE.md, so a brief under the wrong filename is invisible to it. Both failures end the turn outcome=ok having posted nothing.
+- Canonical target: Engine choice decides whether a turn ever posts
