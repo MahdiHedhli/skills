@@ -114,3 +114,15 @@ new or narrow for the canonical guidance.
 - Evidence: Read the AgentMode class definitions and getInitialAgentMode; confirmed the literal sandbox_mode never appears in the bundle. Reproduced the send failing with both error strings, then succeeding with accepted:true and exit_code 0 once INITIAL_AGENT_MODE=agent-full-access was set.
 - Finding: codex-acp defines its own ACP agent modes in dist/index.js and never reads sandbox_mode from ~/.codex/config.toml. DEFAULT_AGENT_MODE is 'agent' with {type:workspaceWrite, networkAccess:false}, so any tool call that opens a socket fails — first as 'Temporary failure in name resolution', then as 'tcp open error: Operation not permitted (os error 1)' once the name resolves from /etc/hosts. Project trust_level does not affect it. AgentMode.getInitialAgentMode() reads the INITIAL_AGENT_MODE environment variable and falls back to that default, so INITIAL_AGENT_MODE=agent-full-access is the fix; it is inert for other runtimes. Separately, codex reads AGENTS.md and not CLAUDE.md, so a brief under the wrong filename is invisible to it. Both failures end the turn outcome=ok having posted nothing.
 - Canonical target: Engine choice decides whether a turn ever posts
+
+<!-- buzz-learning:db5f76d8649b -->
+### 2026-08-18 — A codex seat cannot report its own inability to fork
+
+- ID: `db5f76d8649b`
+- Area: harness
+- Status: promoted
+- Confidence: observed
+- Source: systemd unit drop-in TasksMax=512 on a codex-backed buzz-acp seat; codex-acp 1.4.0
+- Evidence: A seat at TasksMax=64 produced zero tool calls and no post across many turns while an SSH-spawned driver with identical cwd, brief and env posted successfully. The turn's discarded assistant text read 'Unable to publish the reply: this turn's command runner failed to spawn'. Raising TasksMax to 512 and restarting produced a tool call and a kind 9 within 10 seconds on the next message.
+- Finding: Under systemd, a conservative TasksMax on the agent unit is the dominant cause of a silent codex seat. The codex stack (codex-acp, codex CLI, git, bwrap) exhausts the pids cgroup at TasksMax=64; every fork then fails with EAGAIN and codex reports 'command runner failed to spawn'. Because agents post by forking the buzz CLI, the seat cannot publish the message explaining the failure: the turn ends outcome=ok, nothing is posted, and the harness logs no error. 512 is sufficient. Two diagnostics generalize: the discarded agent_message_chunk text contains codex's own accurate self-diagnosis, so read it before theorizing; and a standalone ACP driver spawned over SSH runs outside the service cgroup and will pass every time while the service keeps failing, so resource-limit faults must be reproduced inside the unit.
+- Canonical target: Engine choice decides whether a turn ever posts

@@ -104,7 +104,11 @@ absence claim if the preflight's probes were skipped.
   `BUZZ_ACP_AGENT_COMMAND` change. An engine swap changes the sandbox policy your
   tools run under, not just the model: `codex-acp` reads `AGENTS.md` (not
   `CLAUDE.md`) and defaults to an ACP mode with `networkAccess:false`, ignoring
-  `config.toml`'s `sandbox_mode` — set `INITIAL_AGENT_MODE=agent-full-access`.
+  `config.toml`'s `sandbox_mode` — set `INITIAL_AGENT_MODE=agent-full-access`. Under
+  systemd, also raise `TasksMax` (64 is too low, 512 works): the codex stack
+  exhausts the pids cgroup, every fork fails `EAGAIN`, and a seat that cannot fork
+  cannot send the message saying so. Never diagnose a seat with a driver spawned
+  outside its cgroup — it will pass while the service keeps failing.
 - The `buzz` CLI is JSON in/out. Use `--help` because command flags move. Auth is
   `BUZZ_RELAY_URL`, `BUZZ_PRIVATE_KEY`, and optional `BUZZ_AUTH_TAG`.
 - Mentions are operational: use the exact full display name, never format the

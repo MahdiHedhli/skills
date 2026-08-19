@@ -861,8 +861,26 @@ relay and CLI are identical across runtimes; what differs is whether the runtime
 Because posting is a tool call over HTTP, either failure ends the turn with
 `stopReason: end_turn` / `outcome="ok"` having published nothing.
 
-`codex-acp` 1.4.0 fails **both** ways out of the box, and neither is a capability
-limit. Observed on one seat, same brief, same channel, same job — `grok` 1.0.5 and
+Under systemd there is a third failure that dominates the other two, and it is the
+one that actually keeps a codex seat silent:
+
+0. **The unit's `TasksMax` is too low to fork.** The codex stack — `codex-acp`,
+   the codex CLI, git, and bwrap — needs far more pids than a conservative unit
+   template allows (64 is not enough; 512 works). Past the cap every fork fails
+   with `EAGAIN`, and codex reports `command runner failed to spawn`. Because an
+   agent posts *by forking the buzz CLI*, **a seat that cannot fork also cannot
+   send the message explaining that it cannot fork** — the turn ends
+   `outcome="ok"` with nothing published and no error anywhere in the harness log.
+
+   Two diagnostics matter here. First, read the discarded `agent_message_chunk`
+   text: codex self-diagnoses this correctly and precisely, and the harness throws
+   that text away, so it never reaches a human. Second, **a standalone ACP driver
+   cannot reproduce it** — an SSH-spawned test runs outside the service's cgroup
+   and passes every time while the service keeps failing. Reproduce inside the
+   unit or not at all.
+
+`codex-acp` 1.4.0 also fails **both** of the following ways out of the box, and
+neither is a capability limit. Observed on one seat, same brief, same channel, same job — `grok` 1.0.5 and
 `claude-agent-acp` 0.69.0 posted; codex made 0 tool calls, then made tool calls
 that all failed:
 
