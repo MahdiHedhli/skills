@@ -4,9 +4,9 @@ Canonical online base: `https://hermes-agent.nousresearch.com/docs/developer-gui
 Local base (when installed): `${HERMES_HOME:-$HOME/.hermes}/hermes-agent/website/docs/developer-guide/`  
 AI/dev guide: `${HERMES_HOME:-$HOME/.hermes}/hermes-agent/AGENTS.md`
 
-After refresh, see `LAST_REFRESH.md` for commit/date stamp.
+For the complete current file list and headings, see `_doc_headings.md`. The refresh on 2026-09-28 discovered 56 Markdown pages at commit `e408d363393ccb72267e67bcccf4f8954b438cd9`.
 
-## Developer Guide
+## Core developer guide (selected entry points)
 
 | Page | URL path | Local file |
 |------|----------|------------|
@@ -39,8 +39,16 @@ After refresh, see `LAST_REFRESH.md` for commit/date stamp.
 | ACP Internals | acp-internals | acp-internals.md |
 | Cron Internals | cron-internals | cron-internals.md |
 | Trajectory Format | trajectory-format | trajectory-format.md |
+| CLI Internals | cli-internals | cli-internals.md |
+| Gateway Session Lifecycle | gateway-session-lifecycle | gateway-session-lifecycle.md |
+| Multiplexing Gateway | multiplexing-gateway | multiplexing-gateway.md |
+| Desktop Plugin SDK | desktop-plugin-sdk | desktop-plugin-sdk.md |
+| Middleware | middleware | middleware.md |
+| Observer Hooks | observer-hooks | observer-hooks.md |
+| Terminal Environment Plugin | terminal-environment-plugin | terminal-environment-plugin.md |
+| Codebase Ownership | codebase-ownership | codebase-ownership.md |
 
-Full URL = base + path (e.g. `…/docs/developer-guide/architecture`).
+Full URL = base + path (e.g. `…/docs/developer-guide/architecture`). Check a page's frontmatter for a custom slug.
 
 ## Reading order (new to codebase)
 
@@ -70,7 +78,6 @@ Full URL = base + path (e.g. `…/docs/developer-guide/architecture`).
 
 ## Load strategy for agents
 
-- Prefer **local markdown** under `website/docs/developer-guide/` when the checkout exists (offline, version-matched to install).
-- Prefer **live docs** when validating what users see after `hermes update` or when local tree is dirty/old.
-- Prefer **AGENTS.md** for contribution rubric, footprint ladder, and AI-agent working rules.
-- Prefer **source** (`run_agent.py`, `tools/registry.py`, …) when docs and code conflict — then patch docs or skill.
+- For changes to a specific Hermes version, read that checkout's docs, root and area `AGENTS.md`, and source.
+- For latest-upstream work, read current official docs and code at a recorded commit.
+- If docs and code disagree, trace the running code path and note the version boundary before updating this skill.

@@ -18,39 +18,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 
-DOC_PAGES = [
-    "contributing.md",
-    "architecture.md",
-    "agent-loop.md",
-    "prompt-assembly.md",
-    "context-compression-and-caching.md",
-    "session-storage.md",
-    "provider-runtime.md",
-    "programmatic-integration.md",
-    "adding-tools.md",
-    "adding-providers.md",
-    "adding-platform-adapters.md",
-    "plugins/index.md",
-    "plugin-llm-access.md",
-    "memory-provider-plugin.md",
-    "context-engine-plugin.md",
-    "secret-source-plugin.md",
-    "model-provider-plugin.md",
-    "image-gen-provider-plugin.md",
-    "video-gen-provider-plugin.md",
-    "web-search-provider-plugin.md",
-    "browser-provider-plugin.md",
-    "creating-skills.md",
-    "extending-the-cli.md",
-    "tools-runtime.md",
-    "browser-supervisor.md",
-    "gateway-internals.md",
-    "acp-internals.md",
-    "cron-internals.md",
-    "trajectory-format.md",
-]
-
-
 def skill_dir() -> Path:
     return Path(__file__).resolve().parent.parent
 
@@ -77,7 +44,7 @@ def find_repo() -> Path | None:
 
 
 def git_info(repo: Path) -> dict:
-    info = {"commit": "unknown", "branch": "unknown", "subject": "", "date": ""}
+    info = {"commit": "unknown", "branch": "unknown", "subject": "", "date": "", "remote": "unknown"}
     try:
         def run(*args: str) -> str:
             return subprocess.check_output(
@@ -86,10 +53,11 @@ def git_info(repo: Path) -> dict:
                 stderr=subprocess.DEVNULL,
             ).strip()
 
-        info["commit"] = run("rev-parse", "--short", "HEAD")
+        info["commit"] = run("rev-parse", "HEAD")
         info["branch"] = run("rev-parse", "--abbrev-ref", "HEAD")
         info["subject"] = run("log", "-1", "--pretty=%s")
         info["date"] = run("log", "-1", "--pretty=%cI")
+        info["remote"] = run("remote", "get-url", "origin")
     except (subprocess.CalledProcessError, FileNotFoundError):
         pass
     return info
@@ -146,19 +114,14 @@ def main() -> int:
         f"# Doc headings snapshot",
         f"",
         f"Generated: {now}",
-        f"Repo: `{repo}`",
+        f"Source: `{info['remote']}`",
         f"Commit: `{info['commit']}` ({info['branch']}) — {info['subject']}",
         f"",
     ]
-    missing: list[str] = []
+    doc_pages = sorted(path.relative_to(doc_root) for path in doc_root.rglob("*.md"))
     found = 0
-    for rel in DOC_PAGES:
+    for rel in doc_pages:
         path = doc_root / rel
-        if not path.is_file():
-            missing.append(rel)
-            lines.append(f"## MISSING: {rel}")
-            lines.append("")
-            continue
         text = path.read_text(encoding="utf-8", errors="replace")
         title, h2 = extract_heading_meta(text)
         found += 1
@@ -183,20 +146,19 @@ def main() -> int:
             lines.append(f"  - {h}")
         lines.append("")
 
-    (out_dir / "_doc_headings.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (out_dir / "_doc_headings.md").write_text("\n".join(lines).rstrip() + "\n", encoding="utf-8")
 
     stamp_lines = [
         "# Last refresh",
         "",
         f"- **status:** ok",
         f"- **refreshed_at:** {now}",
-        f"- **repo:** `{repo}`",
+        f"- **source_remote:** {info['remote']}",
         f"- **git_commit:** `{info['commit']}`",
         f"- **git_branch:** `{info['branch']}`",
         f"- **git_subject:** {info['subject']}",
         f"- **git_date:** {info['date']}",
-        f"- **developer_guide_pages_found:** {found}/{len(DOC_PAGES)}",
-        f"- **missing_pages:** {', '.join(missing) if missing else '(none)'}",
+        f"- **developer_guide_pages_found:** {found}/{len(doc_pages)} (discovered recursively)",
         f"- **AGENTS.md_bytes:** {agents_bytes}",
         f"- **headings_snapshot:** `references/_doc_headings.md`",
         "",
@@ -215,10 +177,10 @@ def main() -> int:
     (out_dir / "LAST_REFRESH.md").write_text("\n".join(stamp_lines), encoding="utf-8")
 
     print(f"Refreshed from {repo} @ {info['commit']}")
-    print(f"  pages: {found}/{len(DOC_PAGES)}  missing: {len(missing)}")
+    print(f"  pages: {found}/{len(doc_pages)}")
     print(f"  wrote: {out_dir / 'LAST_REFRESH.md'}")
     print(f"  wrote: {out_dir / '_doc_headings.md'}")
-    return 0 if not missing else 0  # missing pages noted but non-fatal
+    return 0
 
 
 if __name__ == "__main__":

@@ -24,19 +24,15 @@ Condensed from contributing.md + AGENTS.md. Use before opening a Hermes core PR.
 
 ## Dev environment
 
-Preferred: standard installer → work in `$HERMES_HOME/hermes-agent`:
+Use an authorized source checkout with isolated `HERMES_HOME` and `HERMES_RUNTIME_DIR`. Follow current [PM developer workflow](https://hermes-agent.nousresearch.com/docs/reference/package-management#developer-workflow). Hermes PM pins the development Python (currently 3.14):
 
 ```bash
-curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
-cd "${HERMES_HOME:-$HOME/.hermes}/hermes-agent"
-uv pip install -e ".[all,dev]"
-# optional: npm install
+source ./activate
+python -m pm.build_env --source . --out .venv --group dev --group test
 scripts/run_tests.sh
 ```
 
-Manual clone: put venv **outside** the source tree (agents can wipe relative `venv/`).
-
-Isolated runs: `scripts/dev-sandbox.sh …`
+The build destination must not already exist. Use `HERMES_PYTHON` if the independent test environment is outside the checkout. Do not mutate a PM-built environment with raw `pip` or `uv`.
 
 ## Code rules
 
@@ -59,7 +55,9 @@ Isolated runs: `scripts/dev-sandbox.sh …`
 - [ ] Reproduced on current `main`
 - [ ] Fixed whole bug class (sibling call sites)
 - [ ] Verified premise (not fighting intentional design)
-- [ ] `scripts/run_tests.sh` or focused pytest with real `HERMES_HOME` temp
+- [ ] `scripts/run_tests.sh` (full or focused) with isolated `HERMES_HOME`
+- [ ] For profile-scoped behavior, exercised A→B→A through real imports
+- [ ] If dependencies changed, PM lockfile and version bounds updated together
 - [ ] Manual `hermes` exercise of the path
 - [ ] Cross-platform impact considered
 - [ ] Focused single logical change

@@ -1,35 +1,22 @@
 # Last refresh
 
-- **status:** ok (manual finish pass — content derived from local checkout + docs already loaded in session)
-- **refreshed_at:** 2026-07-16T00:00:00Z
-- **repo:** `/Users/mhedhli/.hermes/hermes-agent`
-- **git_commit:** `a6d9d1d` (full: `a6d9d1d2cf2a72e2c1e60fef973f95b90a18bfd7`)
+- **status:** ok
+- **refreshed_at:** 2026-09-28T15:58:52Z
+- **source_remote:** https://github.com/NousResearch/hermes-agent.git
+- **git_commit:** `e408d363393ccb72267e67bcccf4f8954b438cd9`
 - **git_branch:** `main`
-- **developer_guide_pages_found:** 29/29 tracked md pages (see docs-index; excludes `_category_.json`)
-- **missing_pages:** (none)
-- **AGENTS.md:** present (major H2s snapshotted in `_doc_headings.md`)
+- **git_subject:** fix(desktop): break the combo.ts <-> actions.ts import cycle (#126361)
+- **git_date:** 2026-09-28T15:00:41Z
+- **developer_guide_pages_found:** 56/56 (discovered recursively)
+- **AGENTS.md_bytes:** 36935
 - **headings_snapshot:** `references/_doc_headings.md`
 
-## Skill completeness (this finish pass)
+## Agent follow-up
 
-| Artifact | Status |
-|----------|--------|
-| `SKILL.md` | complete v1.1.0 |
-| `references/docs-index.md` | complete |
-| `references/extension-map.md` | complete |
-| `references/architecture-snapshot.md` | complete |
-| `references/contributing-checklist.md` | complete |
-| `references/workflows.md` | complete |
-| `scripts/refresh_from_docs.py` | complete |
-| `scripts/refresh_from_docs.sh` | complete |
-| Cross-link from `hermes-agent` skill | done |
-
-## Agent follow-up on next Hermes update
-
-1. Run `python ${HERMES_SKILL_DIR}/scripts/refresh_from_docs.py`
-2. Diff `_doc_headings.md`
-3. Patch SKILL / references if ladders or file maps drift
-4. Optionally refresh related skill `hermes-agent` for user-facing CLI/config changes
+1. Diff `_doc_headings.md` against prior version (if any).
+2. Re-read changed pages under `website/docs/developer-guide/`.
+3. Patch `SKILL.md` / `references/architecture-snapshot.md` / `extension-map.md` if ladders or file maps drifted.
+4. Optionally refresh related skill `hermes-agent` for user-facing CLI/config changes.
 
 ## Live docs
 

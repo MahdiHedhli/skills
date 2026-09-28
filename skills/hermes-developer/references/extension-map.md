@@ -1,6 +1,6 @@
 # Extension Surface Map
 
-Choose the highest (least footprint) rung that solves the problem correctly.
+Choose the least-footprint surface that solves the problem correctly. Verify against the current target checkout's `AGENTS.md` and developer guide.
 
 ## Decision table
 
@@ -10,6 +10,7 @@ Choose the highest (least footprint) rung that solves the problem correctly.
 | Personal or project-local tool | **Plugin** in `~/.hermes/plugins/` or project `.hermes/plugins/` | Editing core `tools/` |
 | Third-party SaaS / observability / vendor product | **Standalone plugin repo** | PR into core `plugins/` |
 | Structured I/O only when prerequisite configured | **Service-gated tool** (`check_fn`) | Always-on core tool |
+| Tool offered only to a GUI or other session surface | **Named session-selected toolset** | Process-wide env gate or `check_fn` |
 | External system with its own MCP server | **MCP** in config / catalog | Reimplementing as core |
 | New chat channel (Telegram-like) | **Platform adapter** | Forking gateway core |
 | OpenAI-compatible API key provider | **Model provider plugin** | Full built-in provider checklist |
@@ -62,7 +63,7 @@ Simple API-key OpenAI-compatible: prefer `plugins/model-providers/<name>/` + `re
 
 ## Platform adapter
 
-Implement adapter under `gateway/platforms/`; follow adding-platform-adapters + `ADDING_A_PLATFORM.md` if present. Wire setup UX (`hermes gateway setup`, env, allowlists).
+Prefer a platform plugin with `plugin.yaml` and `register(ctx)`; bundled examples are in `plugins/platforms/`. `gateway/platforms/` contains shared and legacy adapters. Follow `adding-platform-adapters.md` and `gateway/platforms/AGENTS.md`; wire setup, allowlists, and per-profile behavior. A built-in adapter needs the guide's separate built-in checklist.
 
 ## Slash command
 

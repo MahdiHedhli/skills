@@ -1,11 +1,11 @@
 ---
 name: hermes-developer
-description: "Develop and extend Hermes Agent — architecture, contribution, tools/plugins/skills/providers, and keep this skill current with official docs."
-version: 1.1.0
-author: Mahdi Hedhli
+description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
-platforms: [linux, macos, windows]
 metadata:
+  version: 1.2.0
+  author: Mahdi Hedhli
+  platforms: [linux, macos, windows]
   hermes:
     tags: [hermes, developer, architecture, contributing, plugins, tools, skills, providers]
     homepage: https://github.com/MahdiHedhli/skills/tree/main/skills/hermes-developer
@@ -14,261 +14,65 @@ metadata:
 
 # Hermes Developer
 
-Authoritative skill for **building on Hermes Agent itself**: core contributions, plugins, tools, skills, providers, adapters, and internals.
+Use this skill for Hermes implementation, extension, integration, and contribution work. For routine setup or use of an installed instance, consult the Hermes user docs or the `hermes-agent` skill if available.
 
-For day-to-day **configure / setup / use** of an installed Hermes instance, load `hermes-agent` instead. Use this skill when the task is code, PRs, extension surfaces, or understanding how the platform works.
+This is a navigation aid, not a frozen API contract. Before substantive work, read the current [developer guide](https://hermes-agent.nousresearch.com/docs/developer-guide/), the target checkout's `AGENTS.md` and relevant area `AGENTS.md`, then verify the actual call path in source. Follow the target repository's instructions and the user's scope. A version-matched checkout is the authority for code that must run on that version; current upstream docs and code are the authority when the user asks for the latest Hermes. Record the commit used. Do not update an installed Hermes checkout or live home as a side effect of refreshing this skill.
 
-**Live docs (source of truth):** https://hermes-agent.nousresearch.com/docs/developer-guide/  
-**Local checkout (preferred when present):** `$HERMES_HOME/hermes-agent` → usually `~/.hermes/hermes-agent`  
-**In-repo AI/dev guide:** `$HERMES_HOME/hermes-agent/AGENTS.md`  
-**Doc sources:** `$HERMES_HOME/hermes-agent/website/docs/developer-guide/`
+## Design constraints
 
-If this skill and live docs disagree, **docs win**. Then refresh this skill (see [Keep this skill current](#keep-this-skill-current)).
+From current [Hermes AGENTS.md](https://github.com/NousResearch/hermes-agent/blob/main/AGENTS.md):
 
----
+- Preserve the cached prompt prefix for a conversation. Changes to skills, tools, and memory normally take effect in a later session; a user-requested `--now` path may invalidate it explicitly. Context compression is the normal exception.
+- Keep the core model tool schema small. Choose the least-footprint path that fits: extend existing code → CLI command plus skill → service-gated tool → plugin → MCP catalog → core tool. A surface available only to a particular client/session belongs in a session-selected toolset, not a process-wide `check_fn` or environment gate.
+- Preserve strict message alternation and do not inject a synthetic user message into an active tool loop.
+- Resolve profile-aware paths through `hermes_constants`, not a hardcoded `~/.hermes` path. Keep secrets in `.env` and behavior settings in `config.yaml`.
+- Verify the observed bug and original design before changing a boundary. Third-party product integrations belong in standalone plugin repositories.
 
-## Sacred design constraints
+## Code map
 
-Every change is reviewed through these lenses (from `AGENTS.md` + Architecture):
+| Concern | Start in code | Read |
+|---|---|---|
+| Agent turns | `run_agent.py` facade; `agent/conversation_loop.py`, `agent/turn_*.py` | [Agent loop](https://hermes-agent.nousresearch.com/docs/developer-guide/agent-loop) |
+| Prompt and cache | `agent/prompt_builder.py`, `agent/system_prompt.py`, compression modules | [Prompt assembly](https://hermes-agent.nousresearch.com/docs/developer-guide/prompt-assembly), [caching](https://hermes-agent.nousresearch.com/docs/developer-guide/context-compression-and-caching) |
+| Tools | `tools/registry.py`, `model_tools.py`, `toolsets.py` | [Tools runtime](https://hermes-agent.nousresearch.com/docs/developer-guide/tools-runtime) |
+| Sessions | `hermes_state.py` facade and `hermes_state_*.py` siblings | [Session storage](https://hermes-agent.nousresearch.com/docs/developer-guide/session-storage) |
+| Gateway | `gateway/run.py` facade, `gateway/run_*.py`, `gateway/session*.py` | [Gateway internals](https://hermes-agent.nousresearch.com/docs/developer-guide/gateway-internals), [session lifecycle](https://hermes-agent.nousresearch.com/docs/developer-guide/gateway-session-lifecycle) |
+| Plugins | `hermes_cli/plugins.py`, `gateway/platform_registry.py`, `plugins/` | [Plugin guide](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins) |
+| CLI | `cli.py`, `hermes_cli/commands.py`, `hermes_cli/cli_*_mixin.py` | [CLI internals](https://hermes-agent.nousresearch.com/docs/developer-guide/cli-internals) |
+| Providers | `hermes_cli/runtime_provider.py`, `hermes_cli/auth.py`, `plugins/model-providers/` | [Provider runtime](https://hermes-agent.nousresearch.com/docs/developer-guide/provider-runtime) |
 
-1. **Prompt caching is sacred.** Do not mutate past context, swap toolsets, or rebuild the system prompt mid-conversation. Exception: explicit context compression. System prompt must stay byte-stable for the life of a conversation (except user actions like `/model`).
-2. **Narrow waist, wide edges.** Every *model tool* is sent on every API call. Prefer CLI + skill → service-gated tool (`check_fn`) → plugin → MCP catalog → new core tool (last resort). Product surface (platforms, providers, TUI, desktop) may grow aggressively at the edges.
-3. **Strict message alternation.** Never two assistant or two user messages in a row. Only consecutive `tool` results are allowed. Never inject a synthetic user message mid-loop.
-4. **Profile-safe paths.** Never hardcode `~/.hermes`. Use `get_hermes_home()` / `display_hermes_home()` from `hermes_constants`.
-5. **Secrets vs config.** API keys/tokens → `.env`. Behavioral settings → `config.yaml`. No new `HERMES_*` env vars for non-secret config.
+Hermes uses facade modules with focused sibling modules. Trace the current facade export and owning sibling before editing. Do not assume a method still lives in the former large module. `AIAgent` serves CLI, gateway, ACP, batch, API server, and library callers; platform behavior belongs at their entry points. For full navigation, use [references/docs-index.md](references/docs-index.md) and [references/architecture-snapshot.md](references/architecture-snapshot.md).
 
-### Footprint ladder (new capability)
+## Choose the extension surface
 
-1. Extend existing code  
-2. CLI command + skill (zero model-tool footprint)  
-3. Service-gated tool with `check_fn`  
-4. Plugin (`~/.hermes/plugins/` or pip entry point)  
-5. MCP server in catalog  
-6. New core tool (only if fundamental and unreachable via terminal/file/MCP)
+- **Existing workflow:** a Hermes CLI command and skill, when possible.
+- **Local or third-party capability:** native plugin under a user/project plugin directory, or a separately distributed package. The standard plugin has `plugin.yaml`, `__init__.py` with `register(ctx)`, and only the declared registrations it needs. `hermes plugins validate` and `hermes plugins list` help inspect discovery. Check the current [plugin manifest and dependency rules](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins) before packaging; dependencies are managed by Hermes PM.
+- **Messaging channel:** a platform plugin is the preferred route. Implement `BasePlatformAdapter`, register with `ctx.register_platform`, and follow [Adding Platform Adapters](https://hermes-agent.nousresearch.com/docs/developer-guide/adding-platform-adapters) plus `gateway/platforms/AGENTS.md`. Bundled platforms are mostly in `plugins/platforms/`; `gateway/platforms/` also has shared and legacy adapters. `kind: platform` loading is deferred, so place outbound model tools in a separate declared `tools.py` if they must be available without starting the adapter.
+- **Model, memory, context, media, search, browser, secret, or terminal environment backend:** read the matching typed-plugin guide before selecting an interface. The [plugin guide](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins) routes among them.
+- **Core model tool:** use only when the existing surfaces cannot provide the capability. Registration lives in `tools/*.py`; exposure is selected through `toolsets.py`. `check_fn` is for process-wide reachability or opt-in, not session/client identity. Verify the handler's current return and error contract in [Tools Runtime](https://hermes-agent.nousresearch.com/docs/developer-guide/tools-runtime).
 
-Third-party product integrations (vendor SaaS, observability backends, etc.) ship as **standalone plugin repos**, not under core `plugins/`.
+See [references/extension-map.md](references/extension-map.md) for the decision table. A plugin should not patch Hermes core files or assume a private internal is a stable plugin API. If an integration needs a missing primitive, identify the generic interface gap and check upstream plans before inventing a private workaround.
 
----
+## Development and verification
 
-## Architecture map
+Current Hermes development uses its package manager (PM), not the older `uv pip install -e` recipe. For a checkout you are authorized to prepare, choose isolated `HERMES_HOME` and `HERMES_RUNTIME_DIR`, then follow [PM developer workflow](https://hermes-agent.nousresearch.com/docs/reference/package-management#developer-workflow) and `source ./activate` (PowerShell: `. .\activate.ps1`). Current development uses PM's pinned Python 3.14; package metadata supporting older Python does not mean the current development environment uses it.
 
-```
-Entry: CLI (cli.py) | Gateway (gateway/run.py) | ACP | Batch | API Server | Library
-                    ↓
-              AIAgent (run_agent.py)
-   Prompt Builder │ Provider Runtime │ Tool Dispatch (model_tools + registry)
-   Compression    │ 3 API modes      │ 70+ tools / ~28 toolsets
-                    ↓
-   SessionDB (SQLite+FTS5)     Tool backends (terminal×6, browser×5, web×4, MCP…)
-```
+For tests, build an independent interpreter from the committed lock if needed:
 
-| Subsystem | Primary files | Doc |
-|-----------|---------------|-----|
-| Agent loop | `run_agent.py` | agent-loop |
-| Prompt assembly | `agent/prompt_builder.py`, `agent/system_prompt.py` | prompt-assembly |
-| Caching / compression | `agent/prompt_caching.py`, `agent/context_compressor.py` | context-compression-and-caching |
-| Providers | `hermes_cli/runtime_provider.py`, `hermes_cli/auth.py` | provider-runtime, adding-providers |
-| Tools | `tools/registry.py`, `model_tools.py`, `toolsets.py` | tools-runtime, adding-tools |
-| Sessions | `hermes_state.py`, `gateway/session.py` | session-storage |
-| Gateway | `gateway/run.py`, `gateway/platforms/*` | gateway-internals |
-| Plugins | `hermes_cli/plugins.py`, `plugins/*` | plugins |
-| Cron | `cron/jobs.py`, `cron/scheduler.py` | cron-internals |
-| ACP | `acp_adapter/` | acp-internals |
-| Slash commands | `hermes_cli/commands.py` → CLI/gateway consumers | extending-the-cli |
-| Skills | `skills/`, `optional-skills/`, hub | creating-skills |
-
-**API modes:** `chat_completions` (default OpenAI-compatible) · `codex_responses` · `anthropic_messages`
-
-**Agent-loop intercepted tools** (stateful; not pure registry dispatch): `todo`, `memory`, `session_search`, `delegate_task`.
-
-**Tool discovery:** any `tools/*.py` with top-level `registry.register()` is auto-imported. Handlers **must** return JSON strings; errors as `{"error": "..."}` never raised.
-
-**Prompt tiers (cached):** `stable` (identity, tools, skills, env) → `context` (project files) → `volatile` (memory/profile/timestamp). Ephemeral per-call overlays are separate and must not break the stable prefix.
-
----
-
-## Task routing — what to load / where to edit
-
-| Goal | Path | Start here |
-|------|------|------------|
-| Custom tool without core PR | Plugin | docs: plugins; `~/.hermes/plugins/<name>/` |
-| Built-in core tool | Core PR | `tools/your_tool.py` + `toolsets.py` |
-| Procedural capability | Skill | `SKILL.md` under skills/ or hub |
-| Inference backend (simple API key) | Model-provider plugin | `plugins/model-providers/` |
-| First-class built-in provider | Core PR | adding-providers checklist |
-| Messaging channel | Platform adapter | `gateway/platforms/`, adding-platform-adapters |
-| Memory / context engine / secrets / image / video / web / browser backend | Typed plugin | matching `*-provider-plugin` / `context-engine-plugin` doc |
-| External tools as-is | MCP | `mcp_servers` in config.yaml |
-| Slash command | Registry | `CommandDef` in `hermes_cli/commands.py` + handlers |
-| Cron automation | Skill blueprint or cron API | creating-skills blueprints; cron-internals |
-| Programmatic embed | Library | programmatic-integration |
-
-Full interface map lives in references and the plugins guide's "If you want to add…" table.
-
----
-
-## Contribution workflow (condensed)
-
-**Priorities:** bugs → cross-platform → security → robustness → skills → tools (rare) → docs.
-
-**Dev bootstrap (preferred):**
 ```bash
-curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
-cd "${HERMES_HOME:-$HOME/.hermes}/hermes-agent"
-uv pip install -e ".[all,dev]"
-# optional: npm install  # browser tools / docs site
-scripts/run_tests.sh
+python -m pm.build_env --source . --out .venv --group dev --group test
+scripts/run_tests.sh tests/gateway/ -v
 ```
 
-**PR hygiene:**
-- Branch: `fix/…`, `feat/…`, `docs/…`, `refactor/…`
-- Conventional commits: `fix(scope): …` scopes include `cli`, `gateway`, `tools`, `skills`, `agent`, `security`
-- Focused PRs; reproduce on current `main`; fix the whole bug class
-- Tests: behavior contracts / invariants, not change-detector snapshots of lists or counts
-- E2E for resolution chains, security boundaries, remote backends — real imports + temp `HERMES_HOME`
-- Cross-platform: no unguarded `SIGKILL`/`setsid`/`killpg`; UTF-8 explicit; `pathlib`
-- Windows: `scripts/check-windows-footguns.py` when touching I/O, processes, terminals
+The destination must be fresh. `scripts/run_tests.sh` is the required runner for Hermes core tests; it isolates credentials, homes, locale, and test files. Use real imports and a temporary `HERMES_HOME` for config, profile, network, and security boundaries. For profile-scoped changes, verify A→B→A. Never aim tests at a live Hermes home. Dependency changes use PM and the lockfile; observe current upper-bound and pinning rules in `AGENTS.md`. See [references/contributing-checklist.md](references/contributing-checklist.md).
 
-**Verify premise before "fixing":** intentional isolation (e.g. profile islands) is not a gap. Read `git log -p -S` for original intent.
+## Refresh this skill
 
----
+The installed snapshot was checked against NousResearch/hermes-agent `e408d363393ccb72267e67bcccf4f8954b438cd9` on 2026-09-28. Refresh before a substantial Hermes task when the target or upstream has moved:
 
-## Recipes (minimal)
+1. Compare the target checkout with current [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent), its root and area `AGENTS.md`, and the relevant developer pages. Use an isolated checkout for a latest-upstream comparison; do not pull a user's installed Hermes without authorization.
+2. Set `HERMES_AGENT_REPO` to that checkout and run `python3 <this skill>/scripts/refresh_from_docs.py`. It discovers every developer-guide Markdown page recursively and writes `references/LAST_REFRESH.md` plus the heading snapshot. It does not rewrite this entrypoint.
+3. Read changed pages and the corresponding code. Update this file and only the affected references. Resolve disagreements by verifying the current code path and noting the version boundary; do not silently turn one version's behavior into a universal rule.
+4. Validate with the skill creator's `quick_validate.py` when available. Check links and at least one important code claim against source.
 
-### Skill (preferred for most capability)
-See creating-skills. Structure: `SKILL.md` + optional `scripts/`, `references/`, `templates/`, `assets/`.  
-Secrets → `required_environment_variables`; non-secrets → `metadata.hermes.config`.  
-Template tokens: `${HERMES_SKILL_DIR}`, `${HERMES_SESSION_ID}`.
-
-### Built-in tool
-1. `tools/foo_tool.py` — handler + schema + `check_fn` + `registry.register(...)`
-2. Add name to `_HERMES_CORE_TOOLS` or a toolset in `toolsets.py`
-3. Optional: `OPTIONAL_ENV_VARS` in `hermes_cli/config.py`
-4. Test: `hermes chat -q "…"`
-
-### Plugin
-```bash
-mkdir -p ~/.hermes/plugins/myplugin
-# plugin.yaml + __init__.py register(ctx) + handlers returning JSON strings
-hermes plugins list
-```
-Hooks: `pre_tool_call` / `post_tool_call` and others per plugins guide. Do not patch core files from plugins — widen the generic surface if needed.
-
-### Slash command
-1. `CommandDef` in `COMMAND_REGISTRY` (`hermes_cli/commands.py`)
-2. Handler in `cli.py` `process_command`
-3. Optional gateway handler in `gateway/run.py`  
-Help, autocomplete, Telegram menu, Slack map all derive from the registry.
-
-### Tests
-```bash
-scripts/run_tests.sh
-python -m pytest tests/tools/ -q -o 'addopts='
-```
-Suite auto-redirects `HERMES_HOME` to temps — never point tests at real home.
-
----
-
-## Keep this skill current
-
-When Hermes docs or `AGENTS.md` change, or before a non-trivial platform task, **refresh this skill**.
-
-### Refresh procedure (mandatory when docs may have drifted)
-
-1. **Locate sources**
-   - Local: `${HERMES_HOME:-$HOME/.hermes}/hermes-agent`
-   - Docs tree: `website/docs/developer-guide/**/*.md`
-   - AI guide: `AGENTS.md`
-   - Live index: https://hermes-agent.nousresearch.com/docs/developer-guide/contributing
-
-2. **Pull latest if git-managed**
-   ```bash
-   cd "${HERMES_HOME:-$HOME/.hermes}/hermes-agent" && git fetch && git log -1 --oneline origin/main
-   # optional: git pull --ff-only  (only if user wants install tree updated)
-   ```
-
-3. **Run the refresh script** (writes reference snapshots + stamp)
-   ```bash
-   bash ${HERMES_SKILL_DIR}/scripts/refresh_from_docs.sh
-   # or: python ${HERMES_SKILL_DIR}/scripts/refresh_from_docs.py
-   ```
-
-4. **Diff & patch**
-   - Read `references/LAST_REFRESH.md` and changed reference files
-   - Patch this `SKILL.md` if ladders, file maps, or recipes drifted
-   - Use `skill_manage(action='patch')` for surgical updates; full `edit` only for major overhauls
-
-5. **Also update** the user-facing `hermes-agent` skill if CLI/commands/config surfaces changed (related skill).
-
-6. **Verify**
-   - Spot-check one architecture claim against source (`run_agent.py` or docs)
-   - Confirm doc URLs still resolve (local files or browser)
-
-### When to refresh without being asked
-- User says Hermes was updated / `hermes update` ran
-- A procedure in this skill fails against real code
-- Contributing to Hermes and docs are older than ~2 weeks vs local `git log`
-- New extension surface appears (new plugin kind, new API mode, new entry point)
-
-### What NOT to bake into this skill
-- Full verbatim copies of every developer page (use references + links)
-- User config walkthroughs (belongs in `hermes-agent`)
-- Stale model lists / tool counts as hard assertions (counts change; say "see toolsets.py")
-
----
-
-## Pitfalls
-
-| Pitfall | Fix |
-|---------|-----|
-| Mid-conversation tool enable | Won't apply until new session — preserves cache |
-| New core tool "because it's easier" | Use skill/plugin/MCP first |
-| Hardcoded `~/.hermes` | Breaks profiles — use `get_hermes_home()` |
-| Handler returns dict / raises | Always `json.dumps`; catch and return error JSON |
-| Lazy pagination on instructional tools | Models skip page 2 — load fully |
-| Plugin in core tree for third-party SaaS | Standalone repo + `~/.hermes/plugins/` |
-| Change-detector tests | Assert invariants, not enumeration counts |
-| Synthetic user msg mid-loop | Breaks alternation / providers reject |
-| Venv inside agent workspace | Agent may `rm -rf` it — keep venv outside tree |
-
----
-
-## Quick links
-
-| Topic | URL |
-|-------|-----|
-| Contributing | https://hermes-agent.nousresearch.com/docs/developer-guide/contributing |
-| Architecture | https://hermes-agent.nousresearch.com/docs/developer-guide/architecture |
-| Agent loop | https://hermes-agent.nousresearch.com/docs/developer-guide/agent-loop |
-| Prompt assembly | https://hermes-agent.nousresearch.com/docs/developer-guide/prompt-assembly |
-| Caching | https://hermes-agent.nousresearch.com/docs/developer-guide/context-compression-and-caching |
-| Sessions | https://hermes-agent.nousresearch.com/docs/developer-guide/session-storage |
-| Provider runtime | https://hermes-agent.nousresearch.com/docs/developer-guide/provider-runtime |
-| Programmatic | https://hermes-agent.nousresearch.com/docs/developer-guide/programmatic-integration |
-| Adding tools | https://hermes-agent.nousresearch.com/docs/developer-guide/adding-tools |
-| Adding providers | https://hermes-agent.nousresearch.com/docs/developer-guide/adding-providers |
-| Platform adapters | https://hermes-agent.nousresearch.com/docs/developer-guide/adding-platform-adapters |
-| Plugins | https://hermes-agent.nousresearch.com/docs/developer-guide/plugins |
-| Creating skills | https://hermes-agent.nousresearch.com/docs/developer-guide/creating-skills |
-| Extending CLI | https://hermes-agent.nousresearch.com/docs/developer-guide/extending-the-cli |
-| Tools runtime | https://hermes-agent.nousresearch.com/docs/developer-guide/tools-runtime |
-| Gateway | https://hermes-agent.nousresearch.com/docs/developer-guide/gateway-internals |
-| Cron | https://hermes-agent.nousresearch.com/docs/developer-guide/cron-internals |
-| ACP | https://hermes-agent.nousresearch.com/docs/developer-guide/acp-internals |
-| Trajectory | https://hermes-agent.nousresearch.com/docs/developer-guide/trajectory-format |
-| GitHub | https://github.com/NousResearch/hermes-agent |
-
-## Reference files
-
-| File | Purpose |
-|------|---------|
-| `references/docs-index.md` | Full developer-guide catalog + reading order |
-| `references/extension-map.md` | Skill vs tool vs plugin vs provider decision table |
-| `references/architecture-snapshot.md` | Condensed architecture / loop / prompt tiers |
-| `references/contributing-checklist.md` | PR / security / anti-patterns checklist |
-| `references/workflows.md` | Agent playbooks (orient, add capability, refresh) |
-| `references/LAST_REFRESH.md` | Last docs sync stamp |
-| `references/_doc_headings.md` | Drift-detection headings snapshot |
-| `scripts/refresh_from_docs.py` | Re-sync from local `$HERMES_HOME/hermes-agent` docs |
-
-**Related skill:** `hermes-agent` — install, configure, CLI, gateway, day-to-day ops.
+Detailed page routing: [docs index](references/docs-index.md). Latest refresh metadata: [LAST_REFRESH.md](references/LAST_REFRESH.md).

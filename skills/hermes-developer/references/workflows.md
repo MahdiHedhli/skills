@@ -1,12 +1,12 @@
 # Hermes Developer Workflows
 
-Common agent playbooks. Prefer local docs under `$HERMES_HOME/hermes-agent` when available.
+Common playbooks. Use docs and area `AGENTS.md` from the checkout whose behavior the task must support.
 
 ## W1 — Orient on a subsystem
 
 1. Load this skill (`hermes-developer`).
 2. Open `references/architecture-snapshot.md` + matching page in `website/docs/developer-guide/`.
-3. Grep code for entry symbols (`AIAgent`, `registry.register`, `GatewayRunner`, …).
+3. Search code for entry symbols (`AIAgent`, `registry.register`, `GatewayRunner`, …), then follow facade exports into owning siblings.
 4. Do **not** rely on tool counts / model lists baked into this skill.
 
 ## W2 — Add capability (choose rung)
@@ -25,7 +25,7 @@ Common agent playbooks. Prefer local docs under `$HERMES_HOME/hermes-agent` when
 2. Find line of manifestation + sibling paths.
 3. Confirm intentional design isn't the "bug" (`git log -p -S`).
 4. Fix + invariant tests (not snapshot counts).
-5. `scripts/run_tests.sh` + manual path.
+5. `scripts/run_tests.sh` + manual path in an isolated home.
 6. Conventional commit + focused PR.
 
 ## W4 — Skill authoring
@@ -41,23 +41,22 @@ Common agent playbooks. Prefer local docs under `$HERMES_HOME/hermes-agent` when
 1. `~/.hermes/plugins/<name>/plugin.yaml` + `__init__.py` `register(ctx)`.
 2. Schemas describe **when** the model should call the tool.
 3. Handlers: `(args, **kwargs) -> JSON str`; never raise.
-4. `hermes plugins list` + exercise tool in chat.
+4. `hermes plugins validate`, `hermes plugins list`, and exercise the real registration path.
 5. Third-party products: publish outside core tree.
 
 ## W6 — Keep this skill current
 
-1. `python ${HERMES_SKILL_DIR}/scripts/refresh_from_docs.py`
-2. Diff `references/_doc_headings.md` + `LAST_REFRESH.md`
-3. Patch SKILL/references if architecture or ladders changed
-4. If user CLI/config docs drifted, patch related skill `hermes-agent`
+1. Compare latest official docs and source in an isolated checkout; record its commit.
+2. `HERMES_AGENT_REPO=<checkout> python3 <skill>/scripts/refresh_from_docs.py`
+3. Diff `references/_doc_headings.md` + `LAST_REFRESH.md`
+4. Patch SKILL/references if architecture or ladders changed; validate the skill.
 
 ## W7 — Dashboard / web ops (ops, not core)
 
-User-facing: `hermes dashboard` (default http://127.0.0.1:9119). Needs `.[web,pty]`.  
-Not the focus of this skill — see user guide web-dashboard + `hermes-agent` skill.
+For dashboard development, use the current dashboard/desktop plugin guides and area `AGENTS.md`; for routine operation, use the user guide.
 
 ## Source-of-truth priority
 
-1. Live docs site (what users see after update)
-2. Local `website/docs/developer-guide/` + `AGENTS.md` (version-matched to install)
-3. Source code when docs conflict → fix docs/skill after verifying code
+1. User instructions and the target checkout's `AGENTS.md` / area `AGENTS.md`.
+2. Version-matched source and docs for that checkout, or latest official source and docs when latest upstream is requested.
+3. On a disagreement, trace the executable path and note which commit or version the conclusion covers.

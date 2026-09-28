@@ -1,6 +1,6 @@
 # Architecture Snapshot
 
-Condensed from Architecture + Agent Loop + Prompt Assembly docs. Refresh when those change.
+Checked against the official architecture, agent-loop, and gateway docs plus source at `e408d363393ccb72267e67bcccf4f8954b438cd9` (2026-09-28). Recheck the target checkout before using file locations as instructions.
 
 ## Entry points → one agent core
 
@@ -18,16 +18,17 @@ Platform differences live in the **entry point**, not inside `AIAgent`.
 ## Directory anchors
 
 ```
-run_agent.py           # AIAgent loop
+run_agent.py           # AIAgent facade; loop in agent/conversation_loop.py and turn_*.py
 model_tools.py         # discovery + handle_function_call
 toolsets.py            # groupings / presets
-hermes_state.py        # SQLite sessions + FTS5
+hermes_state.py        # SessionDB facade; hermes_state_*.py siblings
 hermes_constants.py    # get_hermes_home()
 agent/                 # prompt, compression, memory ABC, adapters
 hermes_cli/            # CLI, config, auth, plugins, commands registry
 tools/                 # one module per tool; registry auto-discover
 tools/environments/    # local, docker, ssh, modal, daytona, singularity
-gateway/platforms/     # ~20 adapters
+gateway/               # run.py facade, run_*.py phases, session*.py, shared/legacy adapters
+plugins/platforms/     # most bundled messaging adapters
 plugins/               # typed plugin packages (memory, context_engine, …)
 skills/                # bundled
 optional-skills/       # official but opt-in
@@ -49,15 +50,11 @@ Then MCP tools and plugin tools register.
 
 ## Turn lifecycle (agent loop)
 
-1. Append user message  
-2. Build/reuse cached system prompt  
-3. Preflight compression if needed (~50% context)  
-4. Build API messages for api_mode  
-5. Ephemeral layers (budget/pressure) — not durable system rebuilds  
-6. Prompt cache markers (Anthropic)  
-7. Interruptible API call  
-8. Tool calls → dispatch (concurrent pool unless interactive) → append tool results → loop  
-9. Final text → persist session, flush memory  
+1. Build turn context and preserve the conversation's cached prompt/tool prefix.
+2. Apply compression when current policy calls for it; keep role and tool-call structure valid.
+3. Resolve provider/API mode and make an interruptible call.
+4. Dispatch tool calls and append results through the current turn modules.
+5. Finalize, persist, and report usage. Check `agent/conversation_loop.py` and `agent/turn_*.py` for exact ordering.
 
 ## Message rules
 
@@ -95,9 +92,9 @@ Skills live in **stable**. Memory snapshots in **volatile**. Both are still part
 
 ## Compression notes
 
-- Preflight ~50%; gateway between-turns more aggressive (~85%)  
-- Flush memory first; summarize middle; protect last N messages; keep tool pairs intact  
-- Compression creates child session lineage  
+- Compression policy and thresholds evolve; read the current compressor and session lifecycle docs.
+- Preserve role alternation and tool-call/result pairing.
+- Compression may create child session lineage; follow it when resolving conversation history.
 
 ## Callbacks (platform glue)
 
