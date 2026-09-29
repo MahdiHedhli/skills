@@ -50,6 +50,14 @@ exact Hermes build before a setup wizard edits it. A plugin should report a
 missing route or unserved profile explicitly rather than forcing topology or
 opening another host surface.
 
+HMP's draft `hermes hmp setup check` is deliberately read-only. It checks the
+qualified build, plugin instance, identity, and listener, but it does not
+validate each served profile's route, `API_SERVER_KEY`, or owner authorization.
+Its success cannot certify a particular bot's send path. Pair it with a
+profile-scoped capability check and a real-route fixture before enabling
+writes; do not change host topology or copy a root secret as an automatic
+repair. This HMP setup check is in draft PR #10 until merged and deployed.
+
 On Hermes `8afaab37`, `gateway.run::_profile_runtime_scope` binds each named
 profile's secret mapping. `gateway.platforms._shared::get_scoped_secret`
 does not fall back to the root process environment when a named profile's
