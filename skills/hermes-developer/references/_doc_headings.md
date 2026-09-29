@@ -1,8 +1,8 @@
 # Doc headings snapshot
 
-Generated: 2026-09-28T15:58:52Z
+Generated: 2026-09-29T00:18:24Z
 Source: `https://github.com/NousResearch/hermes-agent.git`
-Commit: `e408d363393ccb72267e67bcccf4f8954b438cd9` (main) — fix(desktop): break the combo.ts <-> actions.ts import cycle (#126361)
+Commit: `81f481b2db39e9c3e3df8cbb063931746263eca2` (main) — fix(agent): carry a custom provider's extra_body into TUI/Desktop agents and aux calls
 
 ## acp-internals.md
 - title: ACP Internals
@@ -182,7 +182,7 @@ Commit: `e408d363393ccb72267e67bcccf4f8954b438cd9` (main) — fix(desktop): brea
 
 ## context-engine-plugin.md
 - title: Context Engine Plugins
-- bytes: 14790
+- bytes: 20317
 - h2:
   - How it works
   - Directory structure
@@ -245,7 +245,7 @@ Commit: `e408d363393ccb72267e67bcccf4f8954b438cd9` (main) — fix(desktop): brea
 
 ## desktop-plugin-sdk.md
 - title: Desktop Plugin SDK (@hermes/plugin-sdk)
-- bytes: 83377
+- bytes: 86079
 - h2:
   - Mental model
   - Two delivery modes
@@ -313,7 +313,7 @@ Commit: `e408d363393ccb72267e67bcccf4f8954b438cd9` (main) — fix(desktop): brea
 
 ## gateway-session-lifecycle.md
 - title: Gateway Session Lifecycle
-- bytes: 35148
+- bytes: 35054
 - h2:
   - Overview
   - 1. SessionSource — Message Origin Descriptor
@@ -481,7 +481,7 @@ Commit: `e408d363393ccb72267e67bcccf4f8954b438cd9` (main) — fix(desktop): brea
 
 ## plugins/index.md
 - title: Build a Hermes Plugin
-- bytes: 94996
+- bytes: 97486
 - h2:
   - Portable Agent Plugins v1 packages
   - Native plugin compatibility contract
@@ -570,7 +570,7 @@ Commit: `e408d363393ccb72267e67bcccf4f8954b438cd9` (main) — fix(desktop): brea
 
 ## relay-shared-metrics.md
 - title: Relay Shared Metrics
-- bytes: 25996
+- bytes: 60733
 - h2:
   - Runtime Dependency and Data Boundary
   - Session-Span Segmentation for Continuous Sessions
@@ -596,7 +596,7 @@ Commit: `e408d363393ccb72267e67bcccf4f8954b438cd9` (main) — fix(desktop): brea
 
 ## session-storage.md
 - title: Session Storage
-- bytes: 25150
+- bytes: 27772
 - h2:
   - Hermes home and profile isolation
   - Codex app-server input ownership
@@ -749,7 +749,7 @@ Commit: `e408d363393ccb72267e67bcccf4f8954b438cd9` (main) — fix(desktop): brea
   - See also
 
 ## AGENTS.md
-- bytes: 36935
+- bytes: 36537
 - h2:
   - What Hermes Is
   - Contribution Rubric — What We Want / What We Don't

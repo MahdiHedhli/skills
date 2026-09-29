@@ -1,14 +1,14 @@
 # Last refresh
 
 - **status:** ok
-- **refreshed_at:** 2026-09-28T15:58:52Z
+- **refreshed_at:** 2026-09-29T00:18:24Z
 - **source_remote:** https://github.com/NousResearch/hermes-agent.git
-- **git_commit:** `e408d363393ccb72267e67bcccf4f8954b438cd9`
+- **git_commit:** `81f481b2db39e9c3e3df8cbb063931746263eca2`
 - **git_branch:** `main`
-- **git_subject:** fix(desktop): break the combo.ts <-> actions.ts import cycle (#126361)
-- **git_date:** 2026-09-28T15:00:41Z
+- **git_subject:** fix(agent): carry a custom provider's extra_body into TUI/Desktop agents and aux calls
+- **git_date:** 2026-09-28T19:49:00-04:00
 - **developer_guide_pages_found:** 56/56 (discovered recursively)
-- **AGENTS.md_bytes:** 36935
+- **AGENTS.md_bytes:** 36537
 - **headings_snapshot:** `references/_doc_headings.md`
 
 ## Agent follow-up

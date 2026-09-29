@@ -1,6 +1,6 @@
 # Architecture Snapshot
 
-Checked against the official architecture, agent-loop, and gateway docs plus source at `e408d363393ccb72267e67bcccf4f8954b438cd9` (2026-09-28). Recheck the target checkout before using file locations as instructions.
+Checked against the official architecture, agent-loop, and gateway docs plus source at `81f481b2db39e9c3e3df8cbb063931746263eca2` (2026-09-28). Recheck the target checkout before using file locations as instructions.
 
 ## Entry points → one agent core
 
