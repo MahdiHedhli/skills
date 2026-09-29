@@ -28,6 +28,28 @@ live Hermes home. Build the plugin wheel and inspect its contents when a
 runtime gate reads package data; source-tree tests can miss an omitted JSON
 allowlist or manifest.
 
+## Gateway setup and profile routing
+
+On Hermes `8afaab3703`, `hermes_cli/config_defaults.py` advertises
+`gateway.multiplex_profiles: true`, but `gateway/config.py` preserves an unset
+raw value as `None`. At gateway startup,
+`hermes_cli/gateway_multiplex_mode.py::resolve_multiplex_mode` runs a blocker
+preflight for unset or retired `false` values; an explicit `true` takes its
+direct config path. Do not interpret `hermes config get`'s resolved default as
+proof that multiplexing is active, or automatically write `true` to make a
+plugin work. On a multi-profile host, review
+`hermes gateway migrate --multiplex --dry-run` and the actual gateway state.
+Explicitly enabling multiplexing can make `/p/<profile>/` reachable on the
+default API listener and change secret scoping. Treat those as host-wide
+security decisions, not a mobile plugin's routine setup step.
+
+HMP's older fixture-qualified builds also require `gateway.profile_routes`
+entries for the `hmp` platform and used explicit multiplex settings in root
+and served-profile config. Requalify that configuration shape against the
+exact Hermes build before a setup wizard edits it. A plugin should report a
+missing route or unserved profile explicitly rather than forcing topology or
+opening another host surface.
+
 ## Emerging unified gateway
 
 As of 2026-09-28, NousResearch/hermes-agent
