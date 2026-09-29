@@ -122,6 +122,10 @@ versioned remote adapter only after the target Hermes release exposes a
 supported authenticated entry, then verify shared session identity, exact
 retry, unknown work, replay/snapshot recovery, and stale-control fencing.
 
+## Per-device privilege after pairing
+
+HMP's owner-controls draft at `3c32796` separates pairing and Bot Chat access from persistent job and default-model writes. The host must type the full word `GRANT` for the specific device after pairing; every other answer records a denial. A durable per-device decision takes precedence over the older configuration allowlist. New device IDs do not inherit a shared user's privilege, and a revoked device cannot be granted controls. The CLI can grant or deny later under its host-terminal guard. The gateway still checks an active device token and profile authorization on each request. Exercise both job and model routes with explicit denial overriding legacy configuration, then with an explicit grant and no legacy entry. This draft needs security review before release; it is an integration pattern, not an upstream Hermes API.
+
 ## Profile model and credentials
 
 `hermes_cli/web_routers/profiles.py::_write_profile_model` validates a provider/model choice and writes under the selected profile's config and secret scope; it is an internal helper. `hermes_cli/inventory.py::build_model_options_payload` backs `GET /api/model/options`, including authenticated choices. A custom provider's picker row can use the bare slug while persisted config reports `custom:<slug>`; use its aliases or normalize deliberately when showing the selected row. Keep credentials, endpoint URLs, and raw config out of a remote picker response. Gate internal writer use to a qualified build and test profile A → B → A, including which profile's credential validates each write. Do not replace Hermes's validation with a client-side allowlist.
