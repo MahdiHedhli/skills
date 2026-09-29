@@ -53,6 +53,14 @@ Choose the least-footprint surface that solves the problem correctly. Verify aga
 
 Discovery sources: user `~/.hermes/plugins/`, project `.hermes/plugins/`, pip entry points.
 
+For a GitHub install, inspect `hermes_cli/plugins_cmd_install.py` and `tools/plugin_guard.py`
+on the target build. At Nous `main` `39faafb6`, bare `hermes plugins install owner/repo` scans
+the full cloned tree; a `#subdir` install selects a sparse checkout first. There is no
+repository ignore file for this scan. A collaborative root-level repo with tests and tooling
+may show caution findings from those files even when runtime plugin code is unchanged. Do
+not disable or bypass the scan to improve its verdict; review the findings and document the
+installed footprint. A subdirectory layout changes the public install command.
+
 ## Built-in provider checklist (summary)
 
 Always: `auth.py`, `models.py`, `runtime_provider.py`, `main.py` menus, `auxiliary_client.py`, `model_metadata.py`, tests, website docs.
