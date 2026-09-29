@@ -118,6 +118,29 @@ do not widen DM access. An unresolved channel type is treated as a DM, fail-clos
 Internal Desktop builds additionally force `owner-only` for local and provider
 agents; OSS/custom builds remain configurable.
 
+#### Relay-signed workflow messages are attributed, not taken at face value
+
+A workflow's `send_message` action is signed with the **relay keypair**
+(`workflow_sink.rs` uses `state.relay_keypair`), so `event.pubkey` is the relay,
+not the workflow's owner. Because the author gate runs *before* the `p`-tag
+mention check, under the default `owner-only` the relay is neither owner nor
+sibling and every workflow wake-up died silently at the gate — the relay-side
+comment promising "mentioned agents are woken (wake is p-tag gated)" was true
+about mentions and wrong about authorship. **Scheduled workflows could not wake
+agents at all before 2026-08-17.**
+
+`workflow_attributed_author()` now special-cases exactly one shape: a
+`KIND_STREAM_MESSAGE` event whose author *is* the relay's own pubkey, carrying
+`buzz:workflow` tag markers. The gate then evaluates the attributed author from
+those markers instead of the signing key. Nothing else is reattributed, so this
+does not widen the gate for ordinary events.
+
+It depends on the harness knowing the relay's own pubkey, fetched over NIP-11 at
+startup (`fetch_relay_self`). If that fetch fails there is a single startup
+warning — `relay self pubkey unavailable … relay-signed workflow messages will be
+dropped by the author gate` — and then workflow wake-ups silently resume failing.
+Grep for it before debugging a workflow that "fires but nothing happens".
+
 ### Gate 3 — Per-channel serialization
 - At most **one prompt in flight per channel**.
 - The same channel is never processed by two agents simultaneously (queue-enforced).
@@ -301,6 +324,26 @@ must ignore unknown fields. Encryption fails closed on negative/non-finite `cost
 
 ## Agent-facing surfaces
 
+### The harness publishes nothing the agent says
+
+**Agent reply text never reaches a channel.** `buzz-acp` consumes
+`agent_message_chunk` only to set a flag (`acp.rs:144` `turn_emitted_text`,
+written at `acp.rs:1753`); no code path turns that text into a message. Every
+`Kind::Custom(9)` construction in the crate is a test fixture. On its own behalf
+the harness publishes just three things:
+
+| Kind | What | Where |
+|---|---|---|
+| 20002 | typing indicator (ephemeral) | `relay.rs:855` `build_typing_event` |
+| 7, then 5 | ack reaction, then its NIP-09 removal | `pool.rs:3883`, `pool.rs:3931` |
+| 44200 | turn metrics | `pool.rs:3681` `publish_agent_turn_metric` |
+
+So **an agent speaks only by executing `buzz messages send`.** Composing an answer
+and sending one are separate acts and only the second is visible. The base prompt
+does say so — `base_prompt.md:78`, "If your turn produced anything worth knowing,
+you MUST publish it" — but says it once, mid-list, in a long prompt, and not every
+runtime acts on it. See *Engine choice decides whether a turn ever posts*.
+
 ### `buzz` CLI — JSON in, JSON out
 Auth env: `BUZZ_RELAY_URL`, `BUZZ_PRIVATE_KEY`, `BUZZ_AUTH_TAG`.
 Exit codes: `0` ok · `1` user error · `2` network · `3` auth · `4` other.
@@ -309,7 +352,7 @@ Exit codes: `0` ok · `1` user error · `2` network · `3` auth · `4` other.
 |---|---|
 | `buzz agents` | `draft-create`, `draft-update` |
 | `buzz messages` | `send`, `get`, `thread`, `search` |
-| `buzz channels` | `list`, `get`, `create`, `join`, `members`, `add-member` |
+| `buzz channels` | `list`, `get`, `create`, `update` (incl. `--visibility`), `join`, `members`, `add-member` |
 | `buzz canvas` | `get`, `set` |
 | `buzz reactions` | `add`, `remove` |
 | `buzz dms` | `list`, `open` |
@@ -318,6 +361,7 @@ Exit codes: `0` ok · `1` user error · `2` network · `3` auth · `4` other.
 | `buzz feed` | `get` |
 | `buzz social` | `publish`, `notes` |
 | `buzz repos` | `create`, `get`, `list` |
+| `buzz projects` | Projects v3 — groups repo coordinates; membership confers no repo authority |
 | `buzz projects` | `create`, `get`, `list`, `add-repo`, `remove-repo`, `update`, `delete` |
 | `buzz issues` | `create`, `get`, `list`, `status` |
 | `buzz pr` | `open`, `update`, `get`, `list`, `status` |
@@ -334,6 +378,29 @@ link or the returned clone URL; do not invent an HTTPS web URL.
 `shell`, `read_file`, `str_replace`, `rg` (ripgrep), `tree`, `todo`, `view_image`,
 plus `paths`/`shim` plumbing. Provided to the agent subprocess via
 `BUZZ_ACP_MCP_COMMAND`.
+
+### Images reach the agent as a URL, not as pixels
+
+buzz-acp builds **text-only** prompts — there is no image content block and no
+`promptCapabilities.image` gate anywhere in the crate. An uploaded image arrives
+inside the message body as ordinary markdown:
+
+```text
+![image](https://<relay-host>/media/<sha256>.jpg)
+```
+
+So "can my agent see images?" is not a question about Buzz. A runtime that can
+fetch the URL and interpret what it downloads will describe the picture; one that
+cannot will see a link and nothing else. Verified: an agy-backed seat answered a
+meme with details present only in the image, having made 5 tool calls in that
+turn — it fetched and read the file itself.
+
+Two consequences worth planning around. Image understanding depends on the
+runtime's network posture, so a sandboxed runtime that cannot open a socket is
+also blind to images — the same root cause that stops it posting (*Engine choice
+decides whether a turn ever posts*). And the media URL is served by the relay
+host, so an agent on a different network segment may be unable to reach an image
+its own channel just received.
 
 ### Mention rules agents must follow
 From `crates/buzz-acp/src/base_prompt.md` — these are **operational, not stylistic**:
@@ -355,6 +422,15 @@ From `crates/buzz-acp/src/base_prompt.md` — these are **operational, not styli
   notifies; a mention nobody must act on is a false alarm.
 
 This mention discipline is enforced **by prompt**, not by the server.
+
+**The base prompt no longer tells agents to read `AGENTS.md`.** Its *Startup
+Recovery* section — which instructed agents to check `buzz feed get`, catch up on
+channel history, and read `AGENTS.md` in the working directory for team context —
+was removed on 2026-08-17 (#6161). Nothing in the prompt now points a runtime at
+an on-disk brief. Whether your seat brief is read at all is therefore purely a
+property of the runtime's own convention (`AGENTS.md` for codex, `CLAUDE.md` for
+claude, `GEMINI.md` for gemini-family), and the safe move is to provide every name
+as a symlink to one file. See *Engine choice decides whether a turn ever posts*.
 
 ---
 
@@ -833,6 +909,62 @@ export BUZZ_ACP_AGENT_COMMAND="claude-agent-acp"
 buzz-acp
 ```
 
+### Engine choice decides whether a turn ever posts
+
+Swapping `BUZZ_ACP_AGENT_COMMAND` is not a like-for-like substitution. Gates,
+relay and CLI are identical across runtimes; what differs is whether the runtime
+(a) reads the seat brief and (b) *lets the brief's command reach the network*.
+Because posting is a tool call over HTTP, either failure ends the turn with
+`stopReason: end_turn` / `outcome="ok"` having published nothing.
+
+Under systemd there is a third failure that dominates the other two, and it is the
+one that actually keeps a codex seat silent:
+
+0. **The unit's `TasksMax` is too low to fork.** The codex stack — `codex-acp`,
+   the codex CLI, git, and bwrap — needs far more pids than a conservative unit
+   template allows (64 is not enough; 512 works). Past the cap every fork fails
+   with `EAGAIN`, and codex reports `command runner failed to spawn`. Because an
+   agent posts *by forking the buzz CLI*, **a seat that cannot fork also cannot
+   send the message explaining that it cannot fork** — the turn ends
+   `outcome="ok"` with nothing published and no error anywhere in the harness log.
+
+   Two diagnostics matter here. First, read the discarded `agent_message_chunk`
+   text: codex self-diagnoses this correctly and precisely, and the harness throws
+   that text away, so it never reaches a human. Second, **a standalone ACP driver
+   cannot reproduce it** — an SSH-spawned test runs outside the service's cgroup
+   and passes every time while the service keeps failing. Reproduce inside the
+   unit or not at all.
+
+`codex-acp` 1.4.0 also fails **both** of the following ways out of the box, and
+neither is a capability limit. Observed on one seat, same brief, same channel, same job — `grok` 1.0.5 and
+`claude-agent-acp` 0.69.0 posted; codex made 0 tool calls, then made tool calls
+that all failed:
+
+1. **It never read the brief.** Codex's instruction-file convention is
+   `AGENTS.md`; a brief written as `CLAUDE.md` is invisible to it. Symlink or
+   duplicate the file. Until then codex answers from the base prompt alone — the
+   observed turn was 45 output tokens of prose, 0 tool calls.
+2. **Its sandbox blocks the network.** `codex-acp` defines its own ACP agent modes
+   and **ignores `sandbox_mode` in `~/.codex/config.toml`** (the string does not
+   appear in `dist/index.js`). `DEFAULT_AGENT_MODE` is `agent` →
+   `{type:"workspaceWrite", networkAccess:false}`. The CLI then dies with
+   `Temporary failure in name resolution`, or — once the host resolves from
+   `/etc/hosts` — `tcp open error: Operation not permitted (os error 1)`.
+   Project `trust_level` does not change this.
+
+   Fix: `INITIAL_AGENT_MODE=agent-full-access` in the harness environment. That is
+   the only documented hook — `AgentMode.getInitialAgentMode()` reads exactly that
+   variable and falls back to the network-denied default. It is inert for other
+   runtimes, so set it unconditionally on any seat that may be switched to codex.
+
+With both applied, the same codex build posts: `{"accepted":true,"event_id":...}`,
+`exit_code: 0`.
+
+The general rule: **an engine swap changes the sandbox policy your tools run
+under, not just the model.** Verify a real post lands after every switch — an
+`outcome="ok"` turn and a typing indicator prove nothing, and a runtime that
+executes `echo` successfully can still be unable to open a socket.
+
 ### Full harness config
 | Var | Default | Notes |
 |---|---|---|
@@ -848,6 +980,10 @@ buzz-acp
 | `BUZZ_API_TOKEN` | — | if relay enforces token auth |
 | `BUZZ_ACP_AGENTS` | `1` | 1–32 |
 | `BUZZ_ACP_LAZY_POOL` | `false` | queue accepted work before spawning subprocesses |
+| `BUZZ_ACP_IDLE_POOL_SLEEP` | `0` | seconds idle before a woken lazy pool is torn back down; requires `--lazy-pool`, 0 = off |
+| `BUZZ_ACP_PERMISSION_MODE` | **`bypass-permissions`** | see below — the default changed 2026-08-18 |
+| `BUZZ_ACP_EFFORT_LEVEL` | — | e.g. `high`/`medium`/`low`; applied via `session/set_config_option` against the adapter's advertised `thought_level`. Silently ignored if unadvertised |
+| `BUZZ_ACP_MODEL` | — | desired model ID, reapplied after every `session_new_full()` |
 | `BUZZ_ACP_HEARTBEAT_INTERVAL` | `0` | 0 = off, else ≥10 |
 | `BUZZ_ACP_HEARTBEAT_PROMPT` / `_FILE` | built-in | mutually exclusive |
 | `BUZZ_ACP_RESPOND_TO` | `owner-only` | |
@@ -855,6 +991,24 @@ buzz-acp
 
 Legacy fallbacks still accepted: `BUZZ_ACP_PRIVATE_KEY`, `BUZZ_ACP_API_TOKEN`,
 `BUZZ_ACP_TURN_TIMEOUT` (→ `IDLE_TIMEOUT`).
+
+**The permission-mode default flipped, and it is a trust-posture change.** Until
+2026-08-18 the default was `dont-ask`: operations needing interactive approval were
+*rejected*, on the reasoning that Buzz exposes no human permission prompt. The
+default is now `bypass-permissions`, which skips the per-tool-call permission flow
+entirely. Nothing about the deployment changed — the same agent now performs
+operations it would previously have refused. Set `BUZZ_ACP_PERMISSION_MODE=default`
+to restore the agent's own built-in prompting. Modes: `default`, `auto`
+(model-gated, degrades to `default` when the active model lacks
+`supportsAutoMode`), `acceptEdits`, `bypassPermissions`, `dontAsk`, `plan`.
+
+**The mode value is adapter-specific, and the `configId` collides.** buzz-acp
+applies this through `session/set_config_option` with `configId: "mode"`, which
+matches `claude-agent-acp`. `codex-acp` also uses `configId: "mode"` but its valid
+values are entirely different (`agent`, `agent-full-access`, `read-only`), so a
+Buzz permission-mode string means nothing to it. For codex, set the sandbox posture
+with `INITIAL_AGENT_MODE` instead — see *Engine choice decides whether a turn ever
+posts*.
 
 **Start with `--agents 2`.** Each agent spawns its own MCP subprocess, so memory
 scales ≈ N × (agent + MCP).
@@ -888,6 +1042,20 @@ Walk the gates **in order** — the cause is almost always gate 1 or 2:
 7. **Burst on startup?** Expected — that's mention replay since the last run.
 8. **Codex `426 Upgrade Required` in logs?** Expected and non-fatal — `codex-acp`
    tries a ChatGPT WebSocket login first and falls back to `OPENAI_API_KEY`.
+
+9. **Turn ended `outcome="ok"` but nothing was posted?** Not a gate failure — the
+   runtime never ran `buzz messages send`. Channel signature: ack reaction appears,
+   typing indicator runs, the reaction is deleted (kind 5), and no kind 9 lands.
+   Confirm with `RUST_LOG=buzz_acp=trace`: non-empty `agent_message_chunk` text plus
+   **zero tool calls** means the runtime answered into the void. Repair the seat
+   brief, not the harness — see *Engine choice decides whether a turn ever posts*.
+
+10. **A workflow fired but the agent never woke?** The message is signed by the
+    relay, not by the workflow owner, and the author gate runs before the mention
+    check. Confirm the harness resolved the relay's own pubkey at startup —
+    absence logs `relay self pubkey unavailable`, and every relay-signed workflow
+    message is then dropped by the gate. Fixed upstream 2026-08-17; on older
+    builds scheduled workflows cannot wake an agent under `owner-only` at all.
 
 See also `docs/welcome-kickoff-silent-failures.md`.
 
@@ -973,6 +1141,12 @@ culture features are **opinions pending code**.
 - Per-turn cost/token telemetry encrypted to the owner (44200).
 - Context compaction (`crates/buzz-agent/src/handoff.rs`: `HandoffTokenCounts`,
   `HandoffOutcome::{Performed,Skipped,Cancelled}`) and agent memory (engrams, 30174).
+- A **reactive context-recovery ladder** (same file) that runs *after* a provider
+  rejects a turn with a context-window 400, not only by compacting ahead of time:
+  outcomes are `Recovered` / `Cancelled` / `Exhausted`, the retry counter is scoped
+  per `run()` rather than per session lifetime, and the summarizer's reasoning is
+  budgeted separately so it cannot starve the handoff summary. An agent that would
+  previously stick on a context-window rejection now gets three attempts.
 - Skill discovery from `.agents/skills`, `.goose/skills`, `.claude/skills`
   (`crates/buzz-agent/src/hints.rs`) — cross-runtime by design.
 - Git as first-class events (NIP-34 patches/announcements/status), `git-sign-nostr`,
@@ -1080,6 +1254,9 @@ it backs, so a drift report names the repairs directly:
 | critical | `crates/buzz-acp/src/config.rs` | harness defaults, owner and runtime configuration |
 | critical | `crates/buzz-auth/src/nip42.rs` | *Debugging* — the four auth rejection reasons |
 | high | `crates/buzz-acp/src/base_prompt.md` | *Agent-facing surfaces* |
+| critical | `crates/buzz-acp/src/acp.rs` | *Agent-facing surfaces* (no publish path for agent text), *Debugging* |
+| high | `crates/buzz-acp/src/pool.rs` | *Agent-facing surfaces* (the only kinds the harness emits) |
+| medium | `crates/buzz-acp/src/relay.rs` | *Agent-facing surfaces* (typing indicator is ephemeral) |
 | high | `crates/buzz-core/src/kind.rs` | *Event kinds*, *Git* |
 | high | `docs/nips/` | *Event kinds* — Buzz NIP extensions and private managed-agent status |
 | high | `Justfile` | *Running it* — `mesh=1` recipes |
@@ -1215,8 +1392,13 @@ inferred:
   `failed inference readiness`.
 - `gemma-4-E4B` reports as **7.5B / 131k context** — the "E4B" label understates it
 
-**Not verified by running:** the Fizz channel-reply proof (the harness path, as
-opposed to raw model serving) and the `deploy/compose` production bundle. Note that
+**Harness reply path verified in production (2026-08-18)** — a four-seat headless
+deployment on a self-hosted relay, driven across `grok`, `claude-agent-acp`,
+`codex-acp` and `agy-acp`. This supplies *The harness publishes nothing the agent
+says* and *Engine choice decides whether a turn ever posts*: event kinds observed on
+the relay, tool-call counts from `RUST_LOG=buzz_acp=trace`.
+
+**Not verified by running:** the `deploy/compose` production bundle. Note that
 a working `/v1/chat/completions` proves *serving only* — Buzz's own runbook is
 explicit that it does not prove harness wiring or provider inheritance.
 

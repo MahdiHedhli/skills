@@ -1,8 +1,8 @@
 {
   "repo": "block/buzz",
   "branch": "main",
-  "compiled_at": "2026-08-05",
-  "head_at_compile": "38bf642fcfa7a9fc1e06d6cf87d66ae94da29341",
+  "compiled_at": "2026-08-19",
+  "head_at_compile": "93114c9c65138397de39729fde0a816eb9f314ab",
   "_comment": "Pinned last-commit SHA per curated upstream file or directory. Each path backs named canonical skill sections; when a path drifts, read the exact source and repair those sections. This is high-signal change detection, not a whole-repo proof. Run scripts/check_updates.py, then acknowledge each reviewed path with --ack. Unsafe bulk --update is disabled.",
   "files": [
     {
@@ -13,13 +13,13 @@
     },
     {
       "path": "crates/buzz-acp/src/lib.rs",
-      "sha": "4da7264d9070",
+      "sha": "50a71137e6f1",
       "backs": "The dispatch model; Debugging; comparison \u2014 owner/sibling author gate, DM hardening, fail-closed channel classification",
       "priority": "critical"
     },
     {
       "path": "crates/buzz-acp/src/config.rs",
-      "sha": "ad538bfb1e6b",
+      "sha": "50a71137e6f1",
       "backs": "Running it; Debugging \u2014 harness defaults, owner resolution input, runtime command and argument normalization",
       "priority": "critical"
     },
@@ -37,8 +37,8 @@
     },
     {
       "path": "crates/buzz-acp/src/base_prompt.md",
-      "sha": "a1d78f2959b4",
-      "backs": "Agent-facing surfaces \u2014 CLI command groups, mention rules",
+      "sha": "d2cfd377e27d",
+      "backs": "Agent-facing surfaces \u2014 CLI command groups, mention rules; The harness publishes nothing the agent says (line 67 is the sole 'you MUST publish' instruction)",
       "priority": "high"
     },
     {
@@ -55,7 +55,7 @@
     },
     {
       "path": "Justfile",
-      "sha": "16cc3de6d6bb",
+      "sha": "6d45f9866500",
       "backs": "Running it \u2014 mesh=1 recipes, setup/dev/relay, mesh-dev-fresh",
       "priority": "high"
     },
@@ -67,7 +67,7 @@
     },
     {
       "path": "crates/buzz-cli/src/lib.rs",
-      "sha": "a1d78f2959b4",
+      "sha": "122a8b898886",
       "backs": "Git \u2014 repos create/bind/protect, pr, messages send-diff flags",
       "priority": "medium"
     },
@@ -91,7 +91,7 @@
     },
     {
       "path": "desktop/src-tauri/tauri.conf.json",
-      "sha": "a7ea86cdcf2a",
+      "sha": "8232299cbe6d",
       "backs": "Running it \u2014 the bundled sidecar list proving packaged builds ship no relay",
       "priority": "medium"
     },
@@ -115,7 +115,7 @@
     },
     {
       "path": "crates/buzz-core/src/agent_turn_metric.rs",
-      "sha": "71265ca36105",
+      "sha": "5e4c05f90b06",
       "backs": "Event kinds \u2014 turn metrics, kind 44200 payload",
       "priority": "low"
     },
@@ -133,13 +133,13 @@
     },
     {
       "path": "crates/buzz-dev-mcp/src",
-      "sha": "18eef633d88a",
+      "sha": "5694e78def8b",
       "backs": "Agent-facing surfaces; Source map \u2014 agent coding toolset",
       "priority": "low"
     },
     {
       "path": "crates/buzz-agent/src/handoff.rs",
-      "sha": "ed4b3e7afafb",
+      "sha": "72d56e7bd3a9",
       "backs": "What Buzz has; Source map \u2014 context compaction behavior",
       "priority": "low"
     },
@@ -181,13 +181,13 @@
     },
     {
       "path": "docs/welcome-kickoff-silent-failures.md",
-      "sha": "284a76c1c7e7",
+      "sha": "076081bfc646",
       "backs": "Debugging \u2014 known silent-failure diagnostics",
       "priority": "medium"
     },
     {
       "path": "crates/buzz-workflow/src/executor.rs",
-      "sha": "60a171b19efd",
+      "sha": "8a2c9af2dbe0",
       "backs": "Personas, teams, workflows; Git \u2014 trigger_* template vars, webhook field mapping",
       "priority": "medium"
     },
@@ -199,7 +199,7 @@
     },
     {
       "path": "desktop/src-tauri/src/managed_agents/parallelism.rs",
-      "sha": "6c40ce394f86",
+      "sha": "50a71137e6f1",
       "backs": "Running it \u2014 Desktop-managed OpenClaw parallelism cap",
       "priority": "high"
     },
@@ -208,6 +208,24 @@
       "sha": "f865c0054b0a",
       "backs": "Agent-facing surfaces \u2014 per-runtime model options and which runtimes need credentials vs CLI OAuth",
       "priority": "high"
+    },
+    {
+      "path": "crates/buzz-acp/src/acp.rs",
+      "sha": "50a71137e6f1",
+      "backs": "Agent-facing surfaces (The harness publishes nothing the agent says); Engine choice decides whether a turn ever posts; Debugging \u2014 turn_emitted_text is a flag only, no publish path",
+      "priority": "critical"
+    },
+    {
+      "path": "crates/buzz-acp/src/pool.rs",
+      "sha": "50a71137e6f1",
+      "backs": "Agent-facing surfaces (The harness publishes nothing the agent says); Engine choice decides whether a turn ever posts; Debugging \u2014 ack reaction add/remove and turn metrics are the only kinds the harness emits",
+      "priority": "high"
+    },
+    {
+      "path": "crates/buzz-acp/src/relay.rs",
+      "sha": "54f11219efe6",
+      "backs": "Agent-facing surfaces \u2014 typing indicator (20002) is ephemeral",
+      "priority": "medium"
     }
   ],
   "absence_probes": {
@@ -297,6 +315,102 @@
       "to": "a7ea86cdcf2a",
       "disposition": "claims-updated",
       "note": "Reviewed sidecar, release churn, and CSP deltas; updated platform bundle guidance."
+    },
+    {
+      "date": "2026-08-18",
+      "path": "crates/buzz-acp/src/config.rs",
+      "from": "ad538bfb1e6b",
+      "to": "50a71137e6f1",
+      "disposition": "claims-updated",
+      "note": "Read full pin..main diff. Permission-mode default flipped dont-ask -> bypass-permissions; Auto and BypassPermissions variants added; new BUZZ_ACP_EFFORT_LEVEL and BUZZ_ACP_IDLE_POOL_SLEEP. Harness config table and permission-mode semantics repaired; adapter-specific configId collision with codex-acp documented."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "crates/buzz-acp/src/lib.rs",
+      "from": "4da7264d9070",
+      "to": "50a71137e6f1",
+      "disposition": "claims-updated",
+      "note": "Read pin..main (+1248/-11). Only #6129 changes a documented claim: relay-signed workflow messages are now gated on their attributed author, and workflows could not wake agents under owner-only before it. Remaining commits add project-owner announcements, steer ledger, context delivery and lazy-pool re-sleep, none of which alter the gate, DM or classification claims."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "crates/buzz-acp/src/base_prompt.md",
+      "from": "a1d78f2959b4",
+      "to": "d2cfd377e27d",
+      "disposition": "claims-updated",
+      "note": "Read full pin..main patch. Startup Recovery removed, taking the only AGENTS.md pointer with it; publish instruction survives at line 78 (citations updated); buzz issues assign and projects deep-link added; mention wording changed to displayed name."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "crates/buzz-cli/src/lib.rs",
+      "from": "a1d78f2959b4",
+      "to": "122a8b898886",
+      "disposition": "claims-updated",
+      "note": "Projects v3 (#5792), channels update --visibility (#5119), typed extractor refactor (#5191). CLI surface table updated with channels update/--visibility and the projects group; issues assign already added via base_prompt review."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "Justfile",
+      "from": "16cc3de6d6bb",
+      "to": "6d45f9866500",
+      "disposition": "no-relevant-change",
+      "note": "Reviewed all four commits: CI file-size gate, model-capabilities manifest, desktop release smoke, mesh cleanup. Verified in the current Justfile that mesh := \"\" and the just mesh=1 dev/staging/production recipe form documented in Running it are unchanged."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "desktop/src-tauri/src/managed_agents/parallelism.rs",
+      "from": "6c40ce394f86",
+      "to": "50a71137e6f1",
+      "disposition": "no-relevant-change",
+      "note": "Read the current file: OPENCLAW_MAX_PARALLELISM is still 5 and the stored-vs-effective contract is unchanged, so the documented 1-32 workers with OpenClaw capped at 5 still holds."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "crates/buzz-dev-mcp/src",
+      "from": "18eef633d88a",
+      "to": "5694e78def8b",
+      "disposition": "no-relevant-change",
+      "note": "#6216 scopes todo usage. Current src listing still provides shell, read_file, str_replace, rg, tree, todo, view_image plus paths/shim, matching the documented toolset."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "desktop/src-tauri/tauri.conf.json",
+      "from": "a7ea86cdcf2a",
+      "to": "8232299cbe6d",
+      "disposition": "no-relevant-change",
+      "note": "All 13 commits are chore(release) version bumps through 0.5.17. The skill cites no Desktop version number, and the externalBin/sidecar claims are unchanged."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "docs/welcome-kickoff-silent-failures.md",
+      "from": "284a76c1c7e7",
+      "to": "076081bfc646",
+      "disposition": "no-relevant-change",
+      "note": "Single commit renames the Bumble agent to Pollen. The skill references this file only as a pointer and names no agent, so no claim is affected."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "crates/buzz-workflow/src/executor.rs",
+      "from": "60a171b19efd",
+      "to": "8a2c9af2dbe0",
+      "disposition": "no-relevant-change",
+      "note": "#4425 adds durable whole-community deletion. Read the current executor: the documented trigger.<key> to trigger_<key> flattening is intact (trigger_text, trigger_author in the mapping table) and resolve_variable/get_field are unchanged, so the workflow template-variable and webhook-mapping claims still hold."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "crates/buzz-core/src/agent_turn_metric.rs",
+      "from": "71265ca36105",
+      "to": "5e4c05f90b06",
+      "disposition": "no-relevant-change",
+      "note": "#4000 adds the desktop NIP-AM backend. Read the current file: kind 44200, AgentTurnMetricPayload's documented fields, nullable token counts and the unrecognized-stopReason-to-Unknown rule are all unchanged. A separate adjacent struct gained authority/cache_class fields, which the skill does not describe."
+    },
+    {
+      "date": "2026-08-19",
+      "path": "crates/buzz-agent/src/handoff.rs",
+      "from": "ed4b3e7afafb",
+      "to": "72d56e7bd3a9",
+      "disposition": "claims-updated",
+      "note": "Three commits change recovery behaviour. HandoffTokenCounts and HandoffOutcome::{Performed,Skipped,Cancelled} are unchanged, but a reactive context-recovery ladder now runs after a provider context-window 400 (Recovered/Cancelled/Exhausted), the retry cap is scoped per run() not per session, and summarizer reasoning is budgeted separately. Added to 'What Buzz has'."
     }
   ]
 }
