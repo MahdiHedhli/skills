@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.2.0
+  version: 1.3.0
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -27,6 +27,7 @@ From current [Hermes AGENTS.md](https://github.com/NousResearch/hermes-agent/blo
 - Preserve strict message alternation and do not inject a synthetic user message into an active tool loop.
 - Resolve profile-aware paths through `hermes_constants`, not a hardcoded `~/.hermes` path. Keep secrets in `.env` and behavior settings in `config.yaml`.
 - Verify the observed bug and original design before changing a boundary. Third-party product integrations belong in standalone plugin repositories.
+- The temporary Sep 2026 old-import compatibility layer has been removed. Internal import paths are not plugin APIs; use `ctx` and documented ABCs where possible, and resolve any remaining private import against the target build.
 
 ## Code map
 
@@ -48,10 +49,12 @@ Hermes uses facade modules with focused sibling modules. Trace the current facad
 - **Existing workflow:** a Hermes CLI command and skill, when possible.
 - **Local or third-party capability:** native plugin under a user/project plugin directory, or a separately distributed package. The standard plugin has `plugin.yaml`, `__init__.py` with `register(ctx)`, and only the declared registrations it needs. `hermes plugins validate` and `hermes plugins list` help inspect discovery. Check the current [plugin manifest and dependency rules](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins) before packaging; dependencies are managed by Hermes PM.
 - **Messaging channel:** a platform plugin is the preferred route. Implement `BasePlatformAdapter`, register with `ctx.register_platform`, and follow [Adding Platform Adapters](https://hermes-agent.nousresearch.com/docs/developer-guide/adding-platform-adapters) plus `gateway/platforms/AGENTS.md`. Bundled platforms are mostly in `plugins/platforms/`; `gateway/platforms/` also has shared and legacy adapters. `kind: platform` loading is deferred, so place outbound model tools in a separate declared `tools.py` if they must be available without starting the adapter.
-- **Model, memory, context, media, search, browser, secret, or terminal environment backend:** read the matching typed-plugin guide before selecting an interface. The [plugin guide](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins) routes among them.
+- **Model, memory, context, media, search, browser, secret, or terminal environment backend:** read the matching typed-plugin guide before selecting an interface. The [plugin guide](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins) routes among them. A language pack can declare `provides_locales` and ship `locales/<id>[.tui|.desktop].yaml` without Python registration.
 - **Core model tool:** use only when the existing surfaces cannot provide the capability. Registration lives in `tools/*.py`; exposure is selected through `toolsets.py`. `check_fn` is for process-wide reachability or opt-in, not session/client identity. Verify the handler's current return and error contract in [Tools Runtime](https://hermes-agent.nousresearch.com/docs/developer-guide/tools-runtime).
 
 See [references/extension-map.md](references/extension-map.md) for the decision table. A plugin should not patch Hermes core files or assume a private internal is a stable plugin API. If an integration needs a missing primitive, identify the generic interface gap and check upstream plans before inventing a private workaround.
+
+For mobile or other remote clients, distinguish a profile from a Bot Mode bot, keep model/config writes inside the routed profile's home and secret scope, and check whether an operation exists on the gateway adapter surface or only in Desktop's TUI RPC. See [integration boundaries](references/integration-boundaries.md) for verified examples and security traps.
 
 ## Development and verification
 
@@ -68,7 +71,7 @@ The destination must be fresh. `scripts/run_tests.sh` is the required runner for
 
 ## Refresh this skill
 
-The installed snapshot was checked against NousResearch/hermes-agent `e408d363393ccb72267e67bcccf4f8954b438cd9` on 2026-09-28. Refresh before a substantial Hermes task when the target or upstream has moved:
+The installed snapshot was checked against NousResearch/hermes-agent `81f481b2db39e9c3e3df8cbb063931746263eca2` on 2026-09-28. Refresh before a substantial Hermes task when the target or upstream has moved:
 
 1. Compare the target checkout with current [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent), its root and area `AGENTS.md`, and the relevant developer pages. Use an isolated checkout for a latest-upstream comparison; do not pull a user's installed Hermes without authorization.
 2. Set `HERMES_AGENT_REPO` to that checkout and run `python3 <this skill>/scripts/refresh_from_docs.py`. It discovers every developer-guide Markdown page recursively and writes `references/LAST_REFRESH.md` plus the heading snapshot. It does not rewrite this entrypoint.
