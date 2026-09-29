@@ -161,6 +161,20 @@ substituted after host handling in a pinned fake-server test. Keep error body,
 endpoint, code, and device identifiers out of user-visible diagnostics and
 normal logs. This is a client-side integration lesson, not a new Hermes API.
 
+HMP mobile F21 adds an optional pre-S2 check after a valid QR supplies the
+endpoint and instance pin. Open the connection with that QR pin before sending
+an unauthenticated `GET /hmp/v1/ready`; send no device key, offer identifier,
+offer secret, or authorization header. Treat the response body as diagnostic,
+not an identity or capability grant. A 200 only proves that route answered at
+that moment, so P2/P4 and the user's fingerprint confirmation remain required.
+Cancel or a newer scan must close the pool and suppress late results. The host
+can observe the phone's source address and timing as soon as it scans, so make
+the check visible and cancellable. In the acceptance matrix, a wrong-key
+first pairing connection now fails on this readiness request before hardware
+key generation; update the expected step without weakening the pin assertion.
+Use a scripted pool for unit tests: a synthetic CGNAT endpoint is not a safe
+network target merely because the offer is synthetic.
+
 ## Profile model and credentials
 
 `hermes_cli/web_routers/profiles.py::_write_profile_model` validates a provider/model choice and writes under the selected profile's config and secret scope; it is an internal helper. `hermes_cli/inventory.py::build_model_options_payload` backs `GET /api/model/options`, including authenticated choices. A custom provider's picker row can use the bare slug while persisted config reports `custom:<slug>`; use its aliases or normalize deliberately when showing the selected row. Keep credentials, endpoint URLs, and raw config out of a remote picker response. Gate internal writer use to a qualified build and test profile A → B → A, including which profile's credential validates each write. Do not replace Hermes's validation with a client-side allowlist.

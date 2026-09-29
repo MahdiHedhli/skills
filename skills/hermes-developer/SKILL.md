@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.18
+  version: 1.3.19
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -64,6 +64,8 @@ Treat a read-only host setup check as a prerequisite check, not a per-bot send g
 When a paired device can perform persistent host actions such as scheduling jobs or changing a bot's default model, require a separate per-device host decision. Pairing and Bot Chat grants do not imply this privilege, even when devices share a user. Default new devices to denied, make the host prompt unambiguous so an earlier yes/no answer cannot grant controls, and provide an explicit host-only way to revoke the decision. Test the denial and grant at the actual route gate; see [integration boundaries](references/integration-boundaries.md).
 
 For pairing failures, distinguish an unreachable host from a received error on an instance-pinned connection. A connection failure does not prove that Tailscale is down; a 5xx does not prove the offer is bad or that a P4 activation did not occur. Suggest a fresh offer only for an identified code or offer problem, and do not automatically retry an uncertain P4 result. See [integration boundaries](references/integration-boundaries.md).
+
+For a phone's QR-derived host precheck, verify the QR identity on the TLS connection before a diagnostic `GET /hmp/v1/ready`. Send no key, offer secret, or authorization material before fingerprint confirmation. A 200 proves only that this pinned route answered then; it cannot authorize pairing or attest a bot channel. The first pairing-pool pin check now happens before key generation, so adjust acceptance fixtures accordingly; see [integration boundaries](references/integration-boundaries.md).
 
 For multi-profile plugins, derive operator health from the running gateway's
 served set, effective feature flags, exact-build gates, and each profile's
