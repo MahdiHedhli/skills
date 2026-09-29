@@ -89,6 +89,17 @@ available for read-only status lookup, keep a definitive refusal's text
 reviewable, and withhold retry or new-send actions while the gate is closed.
 This is a client-state lesson from draft app PR #16, not a new Hermes API claim.
 
+For an explicit "Send as new" after an ambiguous or failed Bot Chat send,
+reconcile the old `client_message_id` through a read-only status lookup first.
+Accepted or queued means no replacement POST; submitted remains pending.
+Before a new attempt, refresh that bot's authorization and write gate and
+read a canonical chat snapshot for its current head. Serialize this action
+with status check and discard, and atomically replace the encrypted pending
+record with the new ID and text before transmitting. Clearing the old record
+first can lose the only recoverable draft if a read or storage write fails.
+A failed preflight leaves the old record visible; a foreground switch stops
+the new POST. This is a mobile client recovery lesson, not a new Hermes API.
+
 A guarded send may report `submitted` after a short admission wait while
 Hermes continues a long turn. The phone may observe transcript rows during
 same-id status reconciliation. Keep pending text encrypted and visible, label
