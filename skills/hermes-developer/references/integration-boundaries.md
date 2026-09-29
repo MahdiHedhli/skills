@@ -55,10 +55,16 @@ profile's secret mapping. `gateway.platforms._shared::get_scoped_secret`
 does not fall back to the root process environment when a named profile's
 `API_SERVER_KEY` is missing. HMP's guarded direct-send endpoint therefore
 fails closed for that profile even if the plugin-wide `direct_send.enabled`
-flag is true. The roster's reported `open_guarded` state is based on that
-flag and does not prove each bot's endpoint resolved. Check the target
-profile's own key source and effective gate without logging the key or
-copying another profile's credential.
+flag is true. An instance-wide roster gate based only on that flag does not
+prove each bot's endpoint resolved. In a multi-profile plugin, report a
+per-bot send gate from the same profile-scoped prerequisites as the route;
+keep an older aggregate gate conservative and treat malformed client-side
+status as closed. A full Hermes write guarantee must not bypass a separate
+owner switch on a plugin route that still uses the keyed loopback endpoint.
+The route rechecks at submission, and a failed draft stays recoverable. Check
+the target profile's own key source without logging the key or copying
+another profile's credential. This HMP correction is draft PR #7, not a
+claim about the installed plugin until it is merged and deployed.
 
 ## Emerging unified gateway
 
