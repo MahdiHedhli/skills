@@ -28,6 +28,28 @@ live Hermes home. Build the plugin wheel and inspect its contents when a
 runtime gate reads package data; source-tree tests can miss an omitted JSON
 allowlist or manifest.
 
+## Emerging unified gateway
+
+As of 2026-09-28, NousResearch/hermes-agent
+[#106742](https://github.com/NousResearch/hermes-agent/pull/106742) is an
+open, unmerged proposal for one profile-scoped `SessionAuthority` owning
+durable admissions, FIFO execution, shared controls, and recovery. The
+companion [entry-point plan](https://gist.github.com/unsupportedpastels/765f9d551ce88ee01630c18367763e75)
+explicitly places a future mobile client behind an authenticated gateway API,
+but treats remote `serve`/Desktop/web cutover as later work. Do not import the
+proposed authority classes or assume their wire shapes exist in an older
+installed Hermes. A mobile plugin must remain a reader/submitter of the
+qualified host and must not become another execution owner.
+
+HMP's current phone already persists `client_message_id` before sending,
+represents ambiguous sends as unconfirmed, and resnapshots after a history
+reset. Those legacy safeguards are reusable; a mailbox `queued` response is
+not a canonical authority admission, and a snapshot reset is not event replay.
+Prefer narrow capability/identity seams and acceptance fixtures now. Build a
+versioned remote adapter only after the target Hermes release exposes a
+supported authenticated entry, then verify shared session identity, exact
+retry, unknown work, replay/snapshot recovery, and stale-control fencing.
+
 ## Profile model and credentials
 
 `hermes_cli/web_routers/profiles.py::_write_profile_model` validates a provider/model choice and writes under the selected profile's config and secret scope; it is an internal helper. `hermes_cli/inventory.py::build_model_options_payload` backs `GET /api/model/options`, including authenticated choices. A custom provider's picker row can use the bare slug while persisted config reports `custom:<slug>`; use its aliases or normalize deliberately when showing the selected row. Keep credentials, endpoint URLs, and raw config out of a remote picker response. Gate internal writer use to a qualified build and test profile A → B → A, including which profile's credential validates each write. Do not replace Hermes's validation with a client-side allowlist.
