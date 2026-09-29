@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.20
+  version: 1.3.22
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -83,7 +83,7 @@ an old adapter's runtime health snapshot in place until the gateway restarts.
 Confirm the exact installed commit, Plugin Doctor, compatibility, and fresh
 per-profile health after restart; verify one real client send separately.
 
-For gateway platform messages, distinguish task scheduling from durable admission. On the inspected experimental Hermes build, `_gateway_accepted` can be true before the later `AdmissionTicket` outcome. Wait for `admission_ticket.reported` where that API exists; keep missing or timed-out outcomes ambiguous under the same idempotency key, without an automatic retry. The inspected session-chat stream also lacks the approval notifier used by `/v1/runs`. Check the exact route and build before promising answerable Bot Chat prompts; see [integration boundaries](references/integration-boundaries.md).
+For gateway platform messages, distinguish task scheduling from durable admission. On the inspected experimental Hermes build, `_gateway_accepted` can be true before the later `AdmissionTicket` outcome. Wait for `admission_ticket.reported` where that API exists; treat `refused_other` as ambiguous when its reason is unavailable, since it can include `persist_failed`. Keep missing, unfamiliar, or timed-out outcomes under the same idempotency key without automatic retry, and add a local transcript observation only after confirmed admission. The inspected session-chat stream also lacks the approval notifier used by `/v1/runs`. Check the exact route and build before promising answerable Bot Chat prompts; see [integration boundaries](references/integration-boundaries.md).
 
 ## Development and verification
 

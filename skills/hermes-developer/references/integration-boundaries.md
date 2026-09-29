@@ -153,6 +153,24 @@ host-granted phone could create a paused job, while model management still
 returned unavailable. The ungranted sibling saw neither route. A device grant
 must never override a feature's exact-build gate.
 
+## Mobile cron delivery and continuity on Hermes `8afaab37`
+
+The profile-scoped `/api/jobs` route accepts `deliver` and `repeat` but not
+`continuity` or `context_from`. A job created with `deliver: local` can run
+successfully without posting to a Bot Chat; show the destination and last run
+status before diagnosing it as a failed scheduler. Desktop's “Run history only”
+maps to `local`, and “Hermes's chat (bot responds)” maps to the bare `bot-chat`
+token in the selected profile. Desktop continuity maps to `context_from` with
+`self`. For a plugin needing that setting in the same write, call the exact
+qualified `cron.scheduler.create_job_with_scheduler_registration` and
+`cron.jobs.update_job` under `gateway.run._profile_runtime_scope`, applying the
+same prompt scan and lifecycle guard as Hermes's HTTP route. Keep arbitrary
+delivery targets and raw cron records out of a phone facade; preserve other
+context references when toggling `self`. An isolated-home check on both the
+installed source and extracted stock build verified paused creation, delivery,
+continuity, finite runs, and edit. This is a version-specific private bridge,
+not a stable plugin API.
+
 ## Pairing failure guidance
 
 The HMP mobile client's F19 pairing-error change distinguishes transport
@@ -198,4 +216,4 @@ For a narrower phone-only search, HMP can expose authorized Bot Chat history pag
 
 Approval and clarify waits use Hermes's own profile-scoped timeouts: `approvals.timeout` (default 300 seconds) and `agent.clarify_timeout` (default 3600 seconds). A client-side timer does not own the pending decision; `api_server_runs.py` can return `409 approval_not_pending` for a late answer. Bind a remote answer to the authorized device and exact pending request, deny access to gateway control paths, bound observation resources, and avoid logging answer text. An approval integration must observe Hermes's pending state rather than infer it from elapsed time alone.
 
-On extracted stock-base `04fa849e` and experimental `7e8c8f07`, the session-chat stream does not register an approval notifier or emit `approval.request`; the `/v1/runs` path has a separate notifier and cannot silently replace a guarded Bot Chat send. HMP's mandatory real-route approval fixture fails on both builds. The experimental `BasePlatformAdapter.handle_message` sets `event._gateway_accepted` when it spawns background processing, before durable admission or refusal is reported through `MessageEvent.admission_ticket` for `defer_policy="reject"`. Returning `202 submitted` from that flag alone can misstate a later refusal. Draft HMP PR #8 now waits for the ticket: only `admitted` reports submitted, `refused_*` reports refusal, and an absent or timed-out result is stored as `unknown` under the original cmid so a replay does not send again. Stock-base lacks the ticket API and keeps its synchronous acceptance behavior. For fixture sends after a gateway restart, wait until Hermes releases its startup-restore gate; an open listener and populated bot roster are too early, and the experimental build correctly reports `refused_draining` then. The isolated T8 Phone chat fixtures now pass on both exact builds, but full qualification still fails on mandatory T7. Keep approvals disabled until that upstream gap is resolved and a full fixture run passes.
+On extracted stock-base `04fa849e` and experimental `7e8c8f07`, the session-chat stream does not register an approval notifier or emit `approval.request`; the `/v1/runs` path has a separate notifier and cannot silently replace a guarded Bot Chat send. HMP's mandatory real-route approval fixture fails on both builds. The experimental `BasePlatformAdapter.handle_message` sets `event._gateway_accepted` when it spawns background processing, before durable admission or refusal is reported through `MessageEvent.admission_ticket` for `defer_policy="reject"`. Returning `202 submitted` from that flag alone can misstate a later refusal. Draft HMP PR #8 now waits for the ticket: only `admitted` reports submitted; known specific refusals report failure; `refused_other`, unfamiliar, absent, and timed-out outcomes remain `unknown` under the original cmid so replay does not send again. `refused_other` can represent `persist_failed`, and the ticket does not expose its reason, so it must not be treated as a definitive failure. Add a Phone chat transcript observation only after confirmed admission; otherwise a refused turn can appear delivered. Stock-base lacks the ticket API and keeps its synchronous acceptance behavior. For fixture sends after a gateway restart, wait until Hermes releases its startup-restore gate; an open listener and populated bot roster are too early, and the experimental build correctly reports `refused_draining` then. The isolated T8 Phone chat fixtures now pass on both exact builds, but full qualification still fails on mandatory T7. Keep approvals disabled until that upstream gap is resolved and a full fixture run passes.
