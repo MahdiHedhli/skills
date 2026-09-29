@@ -135,6 +135,13 @@ Do not prefill the terminal with a yes/no response that could be consumed by
 the wrong prompt. The combined HMP stock-base and experimental direct-send
 fixtures passed after this helper correction.
 
+Qualify persistent-control routes separately on each build. In the isolated
+HMP two-device gateway fixture, the experimental Hermes revision retained the
+qualified cron bridge fingerprint but not the model bridge fingerprint: the
+host-granted phone could create a paused job, while model management still
+returned unavailable. The ungranted sibling saw neither route. A device grant
+must never override a feature's exact-build gate.
+
 ## Profile model and credentials
 
 `hermes_cli/web_routers/profiles.py::_write_profile_model` validates a provider/model choice and writes under the selected profile's config and secret scope; it is an internal helper. `hermes_cli/inventory.py::build_model_options_payload` backs `GET /api/model/options`, including authenticated choices. A custom provider's picker row can use the bare slug while persisted config reports `custom:<slug>`; use its aliases or normalize deliberately when showing the selected row. Keep credentials, endpoint URLs, and raw config out of a remote picker response. Gate internal writer use to a qualified build and test profile A → B → A, including which profile's credential validates each write. Do not replace Hermes's validation with a client-side allowlist.
