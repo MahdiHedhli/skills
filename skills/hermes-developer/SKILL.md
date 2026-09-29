@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.12
+  version: 1.3.13
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -66,6 +66,16 @@ served set, effective feature flags, exact-build gates, and each profile's
 scoped endpoint. Keep snapshots fresh, bounded, and status-only; fail closed
 on stale or incomplete data. Route health does not prove device authorization
 or a later turn's outcome.
+
+When replacing a live platform plugin, check the gateway's active-work status
+before a drain-aware restart. An install into an isolated `HERMES_HOME` should
+use an isolated Hermes build: an installed source checkout's CLI bootstrap may
+first finish its own dependency or product update, even when the target home is
+temporary. `plugins doctor` can warn about missing declared dependencies while
+the plugin is disabled; enable it, then check again. A plugin reload may leave
+an old adapter's runtime health snapshot in place until the gateway restarts.
+Confirm the exact installed commit, Plugin Doctor, compatibility, and fresh
+per-profile health after restart; verify one real client send separately.
 
 For gateway platform messages, distinguish task scheduling from durable admission. On the inspected experimental Hermes build, `_gateway_accepted` can be true before the later `AdmissionTicket` outcome. Wait for `admission_ticket.reported` where that API exists; keep missing or timed-out outcomes ambiguous under the same idempotency key, without an automatic retry. The inspected session-chat stream also lacks the approval notifier used by `/v1/runs`. Check the exact route and build before promising answerable Bot Chat prompts; see [integration boundaries](references/integration-boundaries.md).
 
