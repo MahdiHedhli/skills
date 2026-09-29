@@ -142,6 +142,25 @@ host-granted phone could create a paused job, while model management still
 returned unavailable. The ungranted sibling saw neither route. A device grant
 must never override a feature's exact-build gate.
 
+## Pairing failure guidance
+
+The HMP mobile client's F19 pairing-error change distinguishes transport
+failure from a received 5xx on the pinned connection. The former can suggest
+checking Tailscale and host reachability, but it cannot diagnose which one is
+down. A received 5xx points to a host problem even if its error body is
+malformed; a recognized exact-build refusal still deserves its specific
+message. Limit "ask for a new pairing code" to identified code or offer
+problems. It is misleading after a pin mismatch, failed response verification,
+or an internal host error.
+
+A P4 5xx can occur after Hermes has handled activation. The phone may discard
+its unusable new key without knowing whether a host device record was created.
+Do not claim no activation, automatically re-send P4, or treat the result as a
+routine expired offer. Exercise both a 5xx returned before handling and one
+substituted after host handling in a pinned fake-server test. Keep error body,
+endpoint, code, and device identifiers out of user-visible diagnostics and
+normal logs. This is a client-side integration lesson, not a new Hermes API.
+
 ## Profile model and credentials
 
 `hermes_cli/web_routers/profiles.py::_write_profile_model` validates a provider/model choice and writes under the selected profile's config and secret scope; it is an internal helper. `hermes_cli/inventory.py::build_model_options_payload` backs `GET /api/model/options`, including authenticated choices. A custom provider's picker row can use the bare slug while persisted config reports `custom:<slug>`; use its aliases or normalize deliberately when showing the selected row. Keep credentials, endpoint URLs, and raw config out of a remote picker response. Gate internal writer use to a qualified build and test profile A → B → A, including which profile's credential validates each write. Do not replace Hermes's validation with a client-side allowlist.
