@@ -12,6 +12,22 @@ The profile-scoped API server has `GET /api/sessions?title=Bot Chat&include_hidd
 
 The API server already provides session list/read, metadata PATCH, DELETE, and `/fork` on a profile. `/fork` ends the source session; it is not a non-destructive branch. Keep canonical Bot Chat deletion/archive outside a generic remote session-management UI, and treat project move/export/open-in-terminal as separate capabilities to verify rather than inferring them from the existing session routes.
 
+## Exact-build plugin qualification
+
+HMP's compatibility gates cover selected Hermes source files. For a git
+installation, require both the reviewed file fingerprint and exact commit
+SHA. A read-only source archive can prove its bytes match a clean checkout,
+but it has no git identity; do not add a fingerprint-only archive entry just
+because the git checkout passed. Run Hermes tests through
+`scripts/run_tests.sh` and plugin integration against temporary homes.
+
+The HMP fixture extractor pinned Python 3.11, while Hermes `8afaab37` needed
+Python 3.14 for its locked dependencies. Select the interpreter from the
+target build's package workflow and keep generated environments outside the
+live Hermes home. Build the plugin wheel and inspect its contents when a
+runtime gate reads package data; source-tree tests can miss an omitted JSON
+allowlist or manifest.
+
 ## Profile model and credentials
 
 `hermes_cli/web_routers/profiles.py::_write_profile_model` validates a provider/model choice and writes under the selected profile's config and secret scope; it is an internal helper. `hermes_cli/inventory.py::build_model_options_payload` backs `GET /api/model/options`, including authenticated choices. A custom provider's picker row can use the bare slug while persisted config reports `custom:<slug>`; use its aliases or normalize deliberately when showing the selected row. Keep credentials, endpoint URLs, and raw config out of a remote picker response. Gate internal writer use to a qualified build and test profile A → B → A, including which profile's credential validates each write. Do not replace Hermes's validation with a client-side allowlist.

@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.0
+  version: 1.3.1
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -59,6 +59,8 @@ For mobile or other remote clients, distinguish a profile from a Bot Mode bot, k
 ## Development and verification
 
 Current Hermes development uses its package manager (PM), not the older `uv pip install -e` recipe. For a checkout you are authorized to prepare, choose isolated `HERMES_HOME` and `HERMES_RUNTIME_DIR`, then follow [PM developer workflow](https://hermes-agent.nousresearch.com/docs/reference/package-management#developer-workflow) and `source ./activate` (PowerShell: `. .\activate.ps1`). Current development uses PM's pinned Python 3.14; package metadata supporting older Python does not mean the current development environment uses it.
+
+For an exact-build plugin compatibility check, choose the interpreter from that Hermes revision's lock and test workflow. Do not assume a fixture extractor's hardcoded Python version is suitable. Bind a git install to both its reviewed source fingerprint and commit SHA; verify packaged wheels contain the compatibility data they read. See [integration boundaries](references/integration-boundaries.md).
 
 For tests, build an independent interpreter from the committed lock if needed:
 
