@@ -171,6 +171,13 @@ installed source and extracted stock build verified paused creation, delivery,
 continuity, finite runs, and edit. This is a version-specific private bridge,
 not a stable plugin API.
 
+On 2026-09-29, the owner-created hourly phone job persisted with `deliver:
+bot-chat` and `context_from: [self]`. Its first live run completed `ok` and the
+host recorded a `delivered` Bot Chat outcome with no error; the five-run counter
+advanced to one. That verifies scheduling and host-side delivery. One run and
+the stored setting do not prove that a later run consumed prior output for
+continuity, and the phone display was not visually checked for this run.
+
 ## Pinned plugin update behavior on Hermes `8afaab37`
 
 `hermes plugins check-updates --json` reports a pinned custom plugin with
@@ -185,6 +192,18 @@ revision during a core update; validate the candidate against the exact Hermes
 build, preserve the old SHA for rollback, then explicitly install and restart.
 Until release tags exist, comparing with the repository's `main` is misleading
 when qualified feature work is still on another branch.
+
+HMP draft PR #19 adds `hermes hmp update check` as a read-only command. It uses
+the public GitHub latest-release tag, resolves its full commit (including
+annotated tags), compares that commit's ancestry with the installed Git pin,
+and reads four compatibility manifests at the immutable candidate SHA. It
+does not fetch or execute candidate code, use a token, install, restart, or
+write to the live home. A manifest's `listed` result means only that the
+release names this exact Hermes build; runtime `compat`, per-bot `health`, and
+a real client send remain required after install. As of 2026-09-29 there is
+no published HMP release, so the check reports none. The first release and
+isolated install/rollback exercise remain separate gates; do not call this
+automatic update support.
 
 The exact-ref plugin installer on this build twice failed a readability check
 because Git pack files vanished during its temporary clone. A temporary Git
