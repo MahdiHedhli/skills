@@ -58,6 +58,15 @@ profile-scoped capability check and a real-route fixture before enabling
 writes; do not change host topology or copy a root secret as an automatic
 repair. This HMP setup check is in draft PR #10 until merged and deployed.
 
+Draft HMP PR #11 adds a separate `hermes hmp health check`. The running
+adapter refreshes a status-only snapshot for each served bot using live
+feature flags, exact-build qualification, and profile-scoped endpoint lookup.
+The CLI checks the same TLS-pinned listener and rejects stale, missing, or
+incomplete snapshots. Intentionally disabled channels differ from enabled
+channels whose route or key is unavailable. No key or endpoint belongs in a
+diagnostic record. The check cannot certify a device's bot access or a later
+request outcome.
+
 On Hermes `8afaab37`, `gateway.run::_profile_runtime_scope` binds each named
 profile's secret mapping. `gateway.platforms._shared::get_scoped_secret`
 does not fall back to the root process environment when a named profile's
@@ -79,6 +88,13 @@ pending outcome before the generic read-only state: keep an unconfirmed result
 available for read-only status lookup, keep a definitive refusal's text
 reviewable, and withhold retry or new-send actions while the gate is closed.
 This is a client-state lesson from draft app PR #16, not a new Hermes API claim.
+
+A guarded send may report `submitted` after a short admission wait while
+Hermes continues a long turn. The phone may observe transcript rows during
+same-id status reconciliation. Keep pending text encrypted and visible, label
+the wait as delivery checking, and never settle it solely because matching
+transcript text appears. Draft app PR #20 also keeps a long transcript pinned
+to its latest row after late layout growth unless the reader scrolls up.
 
 ## Emerging unified gateway
 

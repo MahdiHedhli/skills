@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.11
+  version: 1.3.12
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -60,6 +60,12 @@ For mobile or other remote clients, distinguish a profile from a Bot Mode bot, k
 For profile-scoped send routes, validate the target profile's own API server key and effective gate, not only the plugin-wide send flag. Preserve the client's draft until its encrypted pending-send record is durable, retain text after a definitive host refusal, and keep a pending outcome visible if the gate later closes. The exact-build behavior and source paths are in [integration boundaries](references/integration-boundaries.md).
 
 Treat a read-only host setup check as a prerequisite check, not a per-bot send guarantee. Verify each served profile's route, secret scope, and authorization separately before enabling writes; see [integration boundaries](references/integration-boundaries.md).
+
+For multi-profile plugins, derive operator health from the running gateway's
+served set, effective feature flags, exact-build gates, and each profile's
+scoped endpoint. Keep snapshots fresh, bounded, and status-only; fail closed
+on stale or incomplete data. Route health does not prove device authorization
+or a later turn's outcome.
 
 For gateway platform messages, distinguish task scheduling from durable admission. On the inspected experimental Hermes build, `_gateway_accepted` can be true before the later `AdmissionTicket` outcome. Wait for `admission_ticket.reported` where that API exists; keep missing or timed-out outcomes ambiguous under the same idempotency key, without an automatic retry. The inspected session-chat stream also lacks the approval notifier used by `/v1/runs`. Check the exact route and build before promising answerable Bot Chat prompts; see [integration boundaries](references/integration-boundaries.md).
 
