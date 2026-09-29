@@ -66,6 +66,12 @@ the target profile's own key source without logging the key or copying
 another profile's credential. This HMP correction is draft PR #7, not a
 claim about the installed plugin until it is merged and deployed.
 
+A client roster refresh can close a bot's gate after a send begins. Render the
+pending outcome before the generic read-only state: keep an unconfirmed result
+available for read-only status lookup, keep a definitive refusal's text
+reviewable, and withhold retry or new-send actions while the gate is closed.
+This is a client-state lesson from draft app PR #16, not a new Hermes API claim.
+
 ## Emerging unified gateway
 
 As of 2026-09-28, NousResearch/hermes-agent
