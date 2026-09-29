@@ -171,6 +171,30 @@ installed source and extracted stock build verified paused creation, delivery,
 continuity, finite runs, and edit. This is a version-specific private bridge,
 not a stable plugin API.
 
+## Pinned plugin update behavior on Hermes `8afaab37`
+
+`hermes plugins check-updates --json` reports a pinned custom plugin with
+`update_available: false`, no `latest` revision, and a `pinned @ <sha>` reason;
+that means the pin is fixed, not that no newer plugin exists. `hermes plugins
+update <name>` refuses a pinned install and points to an explicit `plugins
+install <source> --force --ref <full-sha>`. `hermes update` updates Hermes core
+and can print plugin compatibility notices, but does not advance a separately
+pinned plugin. A release-aware HMP check therefore needs reviewed release
+metadata and a read-only comparison. Never automatically run a new plugin
+revision during a core update; validate the candidate against the exact Hermes
+build, preserve the old SHA for rollback, then explicitly install and restart.
+Until release tags exist, comparing with the repository's `main` is misleading
+when qualified feature work is still on another branch.
+
+The exact-ref plugin installer on this build twice failed a readability check
+because Git pack files vanished during its temporary clone. A temporary Git
+template containing `gc.auto=0` and `maintenance.auto=false` for that one
+install prevented the race without editing the installed Hermes source. If the
+failure recurs, confirm that the previous plugin and metadata stayed intact,
+then prefer a narrow Git-maintenance workaround and verify the resulting pin,
+gateway startup, and HMP compatibility. Do not treat the installer message's
+suggested recursive permission change as the diagnosis of a vanished file.
+
 ## Pairing failure guidance
 
 The HMP mobile client's F19 pairing-error change distinguishes transport
