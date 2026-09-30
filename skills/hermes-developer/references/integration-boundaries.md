@@ -58,6 +58,35 @@ profile-scoped capability check and a real-route fixture before enabling
 writes; do not change host topology or copy a root secret as an automatic
 repair. This HMP setup check is in draft PR #10 until merged and deployed.
 
+Verified 2026-09-30 on Hermes `ca705dbf7ef86425b381b542712aff310f1ee52c`: a
+live gateway served a newly created profile while root
+`gateway.profile_routes` had no exact `hmp` route for it. Gateway profile
+reconcile rescans the served profiles but does not update the running root
+runner's HMP routes, so HMP's source builder correctly returned `not_routed`.
+Serving, authorization, and a successful send are separate facts. Compare
+`gateway/run_profile_reconcile.py`'s served-profile reconciliation with
+`gateway/run_adapters.py`'s routing and the matcher in `gateway/config.py`;
+check the target build's actual matcher and version before repairing.
+
+Only where root already has explicit `gateway.multiplex_profiles: true`, and the
+tested legacy deployment shape applies, the repair was to give the named
+profile its own nested `gateway.multiplex_profiles: true` and add one exact
+`hmp` route whose `profile` and `guild_id` both equal the selected profile.
+Do not present that as a universal shape. A missing `enabled` differs from
+`enabled: null`: the tested matcher treats true or the default as enabled and
+null as disabled. Never enable root multiplexing automatically, set a global
+allow, create grants, copy keys, or approve unasked users.
+`hermes hmp setup check` is only a prerequisite here, not proof the bot works.
+HMP PR #52's `hermes hmp routes add <profile>` is draft and unreleased, so it
+is not a command to run on an existing install.
+
+For a live host, take a private backup and preserve comments, then check active
+gateway work before an authorized drain-aware restart. Verify the fresh
+listener and runtime process, then have the phone explicitly request access and
+have the operator approve that exact request through the profile's own Hermes
+CLI. This one incident does not refresh the skill against a newer upstream
+snapshot.
+
 Draft HMP PR #11 adds a separate `hermes hmp health check`. The running
 adapter refreshes a status-only snapshot for each served bot using live
 feature flags, exact-build qualification, and profile-scoped endpoint lookup.
