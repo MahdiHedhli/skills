@@ -434,12 +434,24 @@ Root read-only source verification on 2026-09-30 against exact Hermes
 shows it as literal text. That is our app gap. Do not treat all media as upstream-blocked.
 
 **Plugin building blocks.** Hermes already has `MessageEvent.media_urls` and `media_types`,
-`cache_media_from_bytes`, and the native `BasePlatformAdapter` send methods for image, file,
-video, document, and audio. HMP currently handles only text and clarify, and its bridge passes
-text-only parts. Bounded native delivery could use these hooks without core changes, but it
-still needs qualification. See [Deliverable Mode](https://hermes-agent.nousresearch.com/docs/user-guide/features/deliverable-mode),
+the native `BasePlatformAdapter` send methods for image, file, video, document, and audio, and
+module-level cache helpers in `gateway/platforms/base.py`: `cache_document_from_bytes`,
+`cache_image_from_bytes`, `cache_media_bytes`. `cache_media_from_bytes` is absent (stale name), and
+a different `cache_media_bytes` exists in `media_cache.py`; pin the module. HMP's Phone-chat event is
+text-only and it overrides no native outbound media hook, and its bridge passes text-only parts.
+Bounded native delivery could use these hooks without core changes, but it still needs
+qualification. See [Deliverable Mode](https://hermes-agent.nousresearch.com/docs/user-guide/features/deliverable-mode),
 [Adding Platform Adapters](https://hermes-agent.nousresearch.com/docs/developer-guide/adding-platform-adapters), and the exact source
 at [`api_server.py#L3463-L3489`](https://github.com/NousResearch/hermes-agent/blob/ca705dbf7ef86425b381b542712aff310f1ee52c/gateway/platforms/api_server.py#L3463-L3489).
+
+**Source-only helper findings** (archive provenance `ca705dbf`, no run; re-check per build):
+- The document helper has no size or type check and the image helper only a byte cap and magic, with
+  no scoped decode, pixel or EXIF policy observed. Enforce bounds before calling a helper.
+- Unset `media_text_inlined` on a `text/*` item makes the agent note say the content is included; set
+  `media_text_inlined=[False]` when the adapter did not inline it.
+- `merge_pending_message_event` can merge busy-session media into a queued event, and the persisted
+  row looks like a text projection with no stable attachment identity. Qualify both with a fixture
+  before claiming one send is one turn or that history shows the attachment.
 
 **Canonical Bot Chat.** `api_server._session_chat_user_message` accepts text and image parts but
 rejects file parts. `_admit_to_live_bot_chat` returns `None` for a non-string message, and
