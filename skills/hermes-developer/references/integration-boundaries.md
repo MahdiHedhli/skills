@@ -68,17 +68,48 @@ Serving, authorization, and a successful send are separate facts. Compare
 `gateway/run_adapters.py`'s routing and the matcher in `gateway/config.py`;
 check the target build's actual matcher and version before repairing.
 
-Only where root already has explicit `gateway.multiplex_profiles: true`, and the
-tested legacy deployment shape applies, the repair was to give the named
-profile its own nested `gateway.multiplex_profiles: true` and add one exact
-`hmp` route whose `profile` and `guild_id` both equal the selected profile.
-Do not present that as a universal shape. A missing `enabled` differs from
-`enabled: null`: the tested matcher treats true or the default as enabled and
-null as disabled. Never enable root multiplexing automatically, set a global
-allow, create grants, copy keys, or approve unasked users.
-`hermes hmp setup check` is only a prerequisite here, not proof the bot works.
-HMP PR #52's `hermes hmp routes add <profile>` is draft and unreleased, so it
-is not a command to run on an existing install.
+On that exact `ca705dbf` build, the multiplexing root already discovers and
+serves eligible named profiles; their own `multiplex_profiles` flag is not a
+serving prerequisite. Do not change a profile's own flag as a route repair:
+it affects the session namespace and can make existing history inaccessible.
+Prepare only an exact root HMP route for the intended profile, preserving its
+config and history. Root routes remain loaded in the running gateway's config;
+profile rescan and plugin handler reload do not hot-refresh that table, while
+SIGUSR1 performs a drain and restart. Automatic new-bot enrollment needs a
+qualified route-activation primitive rather than merely a config write.
+HMP PR #52's routing command remains draft and its profile-flag write needs
+correction before deployment on this build. A missing route `enabled` differs
+from `enabled: null`; check the build's matcher rather than broadening a route.
+
+Per-bot sending on this deployment also requires the qualified root HMP send
+switch, a keyed root API listener bound to loopback, and each named profile's
+own unique scoped key. Under the multiplexer that key authenticates its
+`/p/<profile>/` route without starting a secondary listener. Verify this on the
+exact build; it does not authorize copying the root key or starting a named
+profile outside the multiplexer. Automatic credential provisioning is a new
+host policy and write contract, not an existing plugin capability.
+
+Native bot grants are user-scoped and can cover multiple paired devices.
+Owner-only remote access cards need an explicit access-management role and
+amendments to HMP's current host-only grant boundary; ordinary bot, scheduler
+or model-setting access does not confer that role. Keep cards device-targeted
+and outside the user-wide transcript. On `ca705dbf`, the profile-scoped pairing
+CLI has no per-request deny, and its store uses process-local locks plus
+separate pending/approved writes. Do not claim atomic remote settlement across
+CLI and gateway writers. A vanished request without a grant is uncertain, not
+success. Always select a validated profile explicitly with `-p`, validate a
+request ID before approving, and verify resulting state without attributing
+another writer's grant to the current ticket. Do not clear every pending
+request to reject one.
+
+The native `.env` helper is not a complete provisioning transaction: it lacks
+cross-process locking/CAS, preserves existing file mode, can refuse managed
+writes silently and may publish values to shared process environment. Require
+a qualified profile-scoped writer, correct owner and private permissions before
+automating unique keys. Inode and profile name alone are not a durable bot
+identity; quarantine ambiguous name reuse rather than carrying old grants over.
+These findings are source observations and proposed feature boundaries, not
+released enrollment or access-card support.
 
 For a live host, take a private backup and preserve comments, then check active
 gateway work before an authorized drain-aware restart. Verify the fresh
@@ -295,7 +326,7 @@ For a narrower phone-only search, HMP can expose authorized Bot Chat history pag
 
 Approval and clarify waits use Hermes's own profile-scoped timeouts: `approvals.timeout` (default 300 seconds) and `agent.clarify_timeout` (default 3600 seconds). A client-side timer does not own the pending decision; `api_server_runs.py` can return `409 approval_not_pending` for a late answer. Bind a remote answer to the authorized device and exact pending request, deny access to gateway control paths, bound observation resources, and avoid logging answer text. An approval integration must observe Hermes's pending state rather than infer it from elapsed time alone.
 
-On extracted stock-base `04fa849e` and experimental `7e8c8f07`, the session-chat stream did not register an approval notifier or emit `approval.request`; the `/v1/runs` path has a separate notifier and cannot silently replace a guarded Bot Chat send. HMP's mandatory real-route approval fixture failed on both builds. Verified 2026-09-30: untagged main `ac0cfa7db94cefa90cf3e35191f38b53888b9e17` did register the notifier and passed the isolated HMP real gateway/PTY fixture 17/17, including refusal of an exact-ID answer from the same device under a different profile. [HMP PR #44](https://github.com/MahdiHedhli/hermes-hmp/pull/44) is evidence only: it adds no runtime allowlist, no live approvals are enabled, and no released build is qualified. Keep the exact pending request ID, instance/profile/conversation binding, and authoritative Hermes settlement. The approved mobile visual design and read-only staged card have no production writer or answer controls; visual approval is not a protocol or release gate. The experimental `BasePlatformAdapter.handle_message` sets `event._gateway_accepted` when it spawns background processing, before durable admission or refusal is reported through `MessageEvent.admission_ticket` for `defer_policy="reject"`. Returning `202 submitted` from that flag alone can misstate a later refusal. Draft HMP PR #8 now waits for the ticket: only `admitted` reports submitted; known specific refusals report failure; `refused_other`, unfamiliar, absent, and timed-out outcomes remain `unknown` under the original cmid so replay does not send again. `refused_other` can represent `persist_failed`, and the ticket does not expose its reason, so it must not be treated as a definitive failure. Add a Phone chat transcript observation only after confirmed admission; otherwise a refused turn can appear delivered. Stock-base lacks the ticket API and keeps its synchronous acceptance behavior. For fixture sends after a gateway restart, wait until Hermes releases its startup-restore gate; an open listener and populated bot roster are too early, and the experimental build correctly reports `refused_draining` then. The isolated T8 Phone chat fixtures passed on both older builds, but full qualification failed on mandatory T7 there. Keep approvals disabled until the target build passes the current full fixture matrix and the explicit runtime-admission, device and exact-release gates; `ac0cfa7` above is not that.
+On extracted stock-base `04fa849e` and experimental `7e8c8f07`, the session-chat stream did not register an approval notifier or emit `approval.request`; the `/v1/runs` path has a separate notifier and cannot silently replace a guarded Bot Chat send. HMP's mandatory real-route approval fixture failed on both builds. Verified 2026-09-30: untagged main `ac0cfa7db94cefa90cf3e35191f38b53888b9e17` did register the notifier and passed the isolated HMP real gateway/PTY fixture 17/17, including refusal of an exact-ID answer from the same device under a different profile. [HMP PR #44](https://github.com/MahdiHedhli/hermes-hmp/pull/44) is evidence only: it adds no runtime allowlist, no live approvals are enabled, and no released build is qualified. Keep the exact pending request ID, instance/profile/conversation binding, and authoritative Hermes settlement. The approved mobile visual design and read-only staged card have no production writer or answer controls; visual approval is not a protocol or release gate. The experimental `BasePlatformAdapter.handle_message` sets `event._gateway_accepted` when it spawns background processing, before durable admission or refusal is reported through `MessageEvent.admission_ticket` for `defer_policy="reject"`. Returning `202 submitted` from that flag alone can misstate a later refusal. Draft HMP PR #8 now waits for the ticket: only `admitted` reports submitted; known specific refusals report failure; `refused_other`, unfamiliar, absent, and timed-out outcomes remain `unknown` under the original cmid so replay does not send again. `refused_other` can represent `persist_failed`, and the ticket does not expose its reason, so it must not be treated as a definitive failure. Add a Phone chat transcript observation only after confirmed admission; otherwise a refused turn can appear delivered. Stock builds without the ticket API must not equate a false scheduling flag with refusal: exact `8afaab37` can retain a busy-queued event with that flag still false. Only strict True proves admission; False, missing or nonboolean remain unknown. For fixture sends after a gateway restart, wait until Hermes releases its startup-restore gate; an open listener and populated bot roster are too early, and the experimental build correctly reports `refused_draining` then. The isolated T8 Phone chat fixtures passed on both older builds, but full qualification failed on mandatory T7 there. Keep approvals disabled until the target build passes the current full fixture matrix and the explicit runtime-admission, device and exact-release gates; `ac0cfa7` above is not that.
 
 ## Approval process qualification
 
@@ -346,8 +377,27 @@ combination, physical devices, and the release gate remain open.
 changing that flag. A false scheduling flag therefore does not prove refusal. Treat it as
 unknown on builds without an admission ticket, preserve the same idempotency key, and do not
 invite an automatic or new-key resend. Ticket builds still require their definitive reported
-outcome. This source-confirmed finding blocks the current draft's dogfood admission pending
-a regression fixture and independent review; it is not a confirmed live duplicate incident.
+outcome. HMP [draft PR #56](https://github.com/MahdiHedhli/hermes-hmp/pull/56) at `86f2a23`
+fixes this, with a causal real-adapter regression and independent review; root's full suite
+passed 1,493 tests with 13 existing skips. It is not a confirmed live duplicate incident.
+
+**Current fixture evidence.** Archive run 10 and independent Git-install run 2 against exact
+`8afaab3703e336d72a72c812dd2dd249f04f166a`, runtime `86f2a23`, each passed all seven stages
+and the exact 27 required integration JUnit cases without failures, errors or skips. Draft
+[PR #58](https://github.com/MahdiHedhli/hermes-hmp/pull/58) adds the independent Git lane;
+its root suite passed 1,558 tests with 13 existing skips. Unsafe metadata is rejected before
+copy or retargeting writes. An archive receipt never qualifies a Git installation. Both
+unsigned receipts are disposable fixture evidence, not live/device/release admission or
+loaded-memory attestation; production approval entries remain empty.
+
+**Git identity correction.** In HMP [draft PR #57](https://github.com/MahdiHedhli/hermes-hmp/pull/57),
+only truly absent `.git` metadata yields a fingerprint-only archive identity. Present but
+unresolvable metadata, including a dangling link, is unidentifiable. Root's suite passed
+1,501 tests with 13 existing skips and focused review cleared the bounded fix. The earlier
+matrices do not qualify this new runtime diff; combined qualification remains required.
+Git HEAD is metadata, not object-store integrity or loaded-module attestation. An existing
+Python 3.11/3.12 symlink-loop exception can surface in direct-send handling but grants no
+capability; that availability limitation remains recorded outside this fix.
 
 ## Chat media and attachments
 

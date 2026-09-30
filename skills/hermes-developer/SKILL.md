@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.28
+  version: 1.3.30
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -60,7 +60,7 @@ For mobile or other remote clients, distinguish a profile from a Bot Mode bot, k
 
 For profile-scoped send routes, validate the target profile's own API server key and effective gate, not only the plugin-wide send flag. Preserve the client's draft until its encrypted pending-send record is durable, retain text after a definitive host refusal, and keep a pending outcome visible if the gate later closes. The exact-build behavior and source paths are in [integration boundaries](references/integration-boundaries.md).
 
-Treat a read-only host setup check as a prerequisite check, not a per-bot send guarantee. Verify each served profile's route, secret scope, and authorization separately before enabling writes. A newly created profile can be served yet lack its exact root `hmp` route (`not_routed`); verify the build's matcher and see [integration boundaries](references/integration-boundaries.md).
+Treat a read-only host setup check as a prerequisite check, not a per-bot send guarantee. Verify each served profile's route, secret scope, and authorization separately before enabling writes. A newly created profile can be served yet lack its exact root `hmp` route (`not_routed`). On `ca705dbf`, its own multiplex flag is not required and changing it affects chat storage; root routes do not hot-refresh on profile rescan. Remote owner access cards, automatic scoped credentials and safe native settlement need separate contracts; see [integration boundaries](references/integration-boundaries.md).
 
 When a paired device can perform persistent host actions such as scheduling jobs or changing a bot's default model, require a separate per-device host decision. Pairing and Bot Chat grants do not imply this privilege, even when devices share a user. Default new devices to denied, make the host prompt unambiguous so an earlier yes/no answer cannot grant controls, and provide an explicit host-only way to revoke the decision. Test the denial and grant at the actual route gate; see [integration boundaries](references/integration-boundaries.md).
 
@@ -84,7 +84,7 @@ an old adapter's runtime health snapshot in place until the gateway restarts.
 Confirm the exact installed commit, Plugin Doctor, compatibility, and fresh
 per-profile health after restart; verify one real client send separately.
 
-For gateway platform messages, distinguish task scheduling from durable admission. On the inspected experimental Hermes build, `_gateway_accepted` can be true before the later `AdmissionTicket` outcome. Wait for `admission_ticket.reported` where that API exists; treat `refused_other` as ambiguous when its reason is unavailable, since it can include `persist_failed`. Keep missing, unfamiliar, or timed-out outcomes under the same idempotency key without automatic retry, and add a local transcript observation only after confirmed admission. The older inspected stock-base `04fa849e` and experimental `7e8c8f07` session-chat streams lacked the approval notifier used by `/v1/runs`; untagged main `ac0cfa7` registered it and passed an isolated HMP real-gateway fixture, though no released build is qualified. Check the exact route and build before promising answerable Bot Chat prompts; see [integration boundaries](references/integration-boundaries.md#search-and-approval-privacy).
+For gateway platform messages, distinguish task scheduling from durable admission. On the inspected experimental Hermes build, `_gateway_accepted` can be true before the later `AdmissionTicket` outcome. On stock `8afaab37`, a false scheduling flag can mean busy-queued, so only strict True proves admission and False/missing/nonboolean stay unknown. Wait for `admission_ticket.reported` where that API exists; treat `refused_other` as ambiguous when its reason is unavailable, since it can include `persist_failed`. Keep missing, unfamiliar, or timed-out outcomes under the same idempotency key without automatic retry, and add a local transcript observation only after confirmed admission. The older inspected stock-base `04fa849e` and experimental `7e8c8f07` session-chat streams lacked the approval notifier used by `/v1/runs`; untagged main `ac0cfa7` registered it and passed an isolated HMP real-gateway fixture, though no released build is qualified. Check the exact route and build before promising answerable Bot Chat prompts; see [integration boundaries](references/integration-boundaries.md#search-and-approval-privacy).
 
 For a source-qualified approval bridge, separate read/send compatibility from approval admission.
 An informational on-disk check does not prove the current process was admitted: the HMP draft
