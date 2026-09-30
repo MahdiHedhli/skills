@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.27
+  version: 1.3.28
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -93,6 +93,8 @@ plugin changes. Historical fixture passes predate this gate; see
 [integration boundaries](references/integration-boundaries.md#approval-process-qualification).
 
 For a mobile session picker or any check-then-read of a current session's messages, `SessionDB.get_session` and `get_messages` on `8afaab37` use separate read contexts, so an eligibility check followed by a read can race a fork or lineage change. Prefer an upstream transactional primitive over copied SQLite logic; see [session snapshot gap](references/integration-boundaries.md#session-snapshot-consistency).
+
+For chat media or attachments in a mobile extension, separate our renderer gap from upstream limits. On Hermes `ca705dbf`, a linked HTTPS Markdown image reaches mobile as text, and existing adapter media hooks could support bounded native delivery after qualification. The Desktop live-owner handoff accepts only strings; the session API normalizer accepts images but rejects file parts. Do not submit multimodal content through a skipped Desktop handoff or fall back silently to Phone chat. Do not enable browser control for attachments. See [chat media and attachments](references/integration-boundaries.md#chat-media-and-attachments).
 
 ## Development and verification
 

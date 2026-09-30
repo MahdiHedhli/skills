@@ -326,6 +326,65 @@ no final current-gate receipt, physical-device result or release clearance is cl
 fixture-only receipt may be installed only into disposable plugin copies; it never adds a
 shipped manifest entry. Archive/no-git lifecycle evidence does not validate the git-SHA branch.
 
+**Update 2026-09-30.** HMP [PR #55](https://github.com/MahdiHedhli/hermes-hmp/pull/55) at `cc02892`
+ran its tooling suite at 1,445 passed, 12 skipped, with 1 existing warning. The figures above
+(1,364 tests, the 17-case matrix) stay as dated history. In run 8, an isolated Hermes `ac0cfa7`
+with HMP runtime `8934993` passed all 7 stages and exactly 27 integration JUnit tests, with an
+unsigned, fixture-only receipt. UUIDv7 wire client-message correlation was positive, and the
+cross-profile case was negative, at the moment of observation; that is not proof of later
+persistence. This matrix does not qualify draft PR #54 runtime `4b4626a`, which turns a definitive
+false into `applied:false`/refusal. A `None` or unfamiliar outcome must stay `unknown`.
+
+The manifest is still empty, so no live admission exists. A full gateway process restart is
+required; resetting the listener is not enough. HMP's non-strict AP-6 accepts broader client
+message IDs, but the bridge correlates on UUIDv7. The earlier fixture's UUIDv4 ID was corrected
+to UUIDv7; it was a fixture defect, not mobile client behavior. Do not assume a current release tag. The final candidate
+combination, physical devices, and the release gate remain open.
+
+**Admission ambiguity found in exact `8afaab37`.** The stock adapter initializes
+`_gateway_accepted=False`; its busy queue-text debounce path can retain an event without
+changing that flag. A false scheduling flag therefore does not prove refusal. Treat it as
+unknown on builds without an admission ticket, preserve the same idempotency key, and do not
+invite an automatic or new-key resend. Ticket builds still require their definitive reported
+outcome. This source-confirmed finding blocks the current draft's dogfood admission pending
+a regression fixture and independent review; it is not a confirmed live duplicate incident.
+
+## Chat media and attachments
+
+Root read-only source verification on 2026-09-30 against exact Hermes
+`ca705dbf7ef86425b381b542712aff310f1ee52c`; this is not a claim about other builds.
+
+**Rendering gap.** A linked HTTPS Markdown image string reaches mobile, but the mobile renderer
+shows it as literal text. That is our app gap. Do not treat all media as upstream-blocked.
+
+**Plugin building blocks.** Hermes already has `MessageEvent.media_urls` and `media_types`,
+`cache_media_from_bytes`, and the native `BasePlatformAdapter` send methods for image, file,
+video, document, and audio. HMP currently handles only text and clarify, and its bridge passes
+text-only parts. Bounded native delivery could use these hooks without core changes, but it
+still needs qualification. See [Deliverable Mode](https://hermes-agent.nousresearch.com/docs/user-guide/features/deliverable-mode),
+[Adding Platform Adapters](https://hermes-agent.nousresearch.com/docs/developer-guide/adding-platform-adapters), and the exact source
+at [`api_server.py#L3463-L3489`](https://github.com/NousResearch/hermes-agent/blob/ca705dbf7ef86425b381b542712aff310f1ee52c/gateway/platforms/api_server.py#L3463-L3489).
+
+**Canonical Bot Chat.** `api_server._session_chat_user_message` accepts text and image parts but
+rejects file parts. `_admit_to_live_bot_chat` returns `None` for a non-string message, and
+`tools/bot_live_delivery.deliver_to_live_owner` requires `str`. Do not submit multimodal content
+to a Desktop-owned canonical session through a handoff skip, or another owner may be caused to
+act. This is a source finding, not an exercised exploit. Attachment-aware, single-owner canonical
+admission needs an upstream change or an equally safe, qualified route. Do not silently fall
+back to Phone chat.
+
+**Existing alternatives that do not fit.** Browser control `/v1/artifacts` requires its flag and
+a Bearer token, profile/principal/family binding, a one-shot download TTL, and in-memory
+receipts. It is not durable chat history, so do not enable browser control for attachments.
+`_resolve_media_to_data_urls` converts bounded, validated `MEDIA` images for its own API
+completions only; it is not a Desktop mailbox or HMP persistent-history path.
+
+**Design requirements.** Use profile-, conversation-, and device-bound opaque handles with native
+validation. Offer no raw-path endpoint and no text-grant authority. Never forward Hermes or
+device credentials to external media hosts. Bound MIME types, bytes, pixels, redirects, and
+network access. If persistent media caching is introduced, encrypt it and support purge.
+Preserve durable pending state with no automatic retry.
+
 ## Session snapshot consistency
 
 On source `8afaab3703e336d72a72c812dd2dd249f04f166a`, `SessionDB.get_session` and `get_messages` borrow separate read contexts and expose no public read transaction spanning both. A current-session eligibility check followed by a messages read can race a fork, lineage, or session mutation. Pre/post checks do not prove one snapshot (ABA: state can change and return). Prefer an upstream transactional selector-plus-messages primitive; do not bypass Hermes with copied private SQLite schema or lineage logic.
