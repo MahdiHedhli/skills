@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.31
+  version: 1.3.32
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -60,7 +60,7 @@ For mobile or other remote clients, distinguish a profile from a Bot Mode bot, k
 
 For profile-scoped send routes, validate the target profile's own API server key and effective gate, not only the plugin-wide send flag. Preserve the client's draft until its encrypted pending-send record is durable, retain text after a definitive host refusal, and keep a pending outcome visible if the gate later closes. The exact-build behavior and source paths are in [integration boundaries](references/integration-boundaries.md).
 
-Treat a read-only host setup check as a prerequisite check, not a per-bot send guarantee. Verify each served profile's route, secret scope, and authorization separately before enabling writes. A newly created profile can be served yet lack its exact root `hmp` route (`not_routed`). On `ca705dbf`, its own multiplex flag is not required and changing it affects chat storage; root routes do not hot-refresh on profile rescan. Remote owner access cards, automatic scoped credentials and safe native settlement need separate contracts; see [integration boundaries](references/integration-boundaries.md).
+Treat a read-only host setup check as a prerequisite check, not a per-bot send guarantee. Verify each served profile's route, secret scope, and authorization separately before enabling writes. A newly created profile can be served yet lack its exact root `hmp` route (`not_routed`). On `ca705dbf`, its own multiplex flag is not required and changing it affects chat storage; root routes do not hot-refresh on profile rescan. Route-only preparation does not make earlier standalone-profile history canonically readable (root-reviewed fixture, one archive build; see the C6 split in the reference). Remote owner access cards, automatic scoped credentials and safe native settlement need separate contracts; see [integration boundaries](references/integration-boundaries.md).
 
 When a paired device can perform persistent host actions such as scheduling jobs or changing a bot's default model, require a separate per-device host decision. Pairing and Bot Chat grants do not imply this privilege, even when devices share a user. Default new devices to denied, make the host prompt unambiguous so an earlier yes/no answer cannot grant controls, and provide an explicit host-only way to revoke the decision. Test the denial and grant at the actual route gate; see [integration boundaries](references/integration-boundaries.md).
 

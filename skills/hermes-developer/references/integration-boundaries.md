@@ -79,10 +79,32 @@ SIGUSR1 performs a drain and restart. Automatic new-bot enrollment needs a
 qualified route-activation primitive rather than merely a config write.
 HMP PR #52 at `4e270f0` corrects that profile-flag write: only the exact root
 route is written. Root and focused review cleared the configuration-write
-candidate, but disposable-host qualification remains open, including history
-reads for a profile without its own multiplex flag. Canonical Bot Chat history
-does not qualify every own-default read path. Do not infer loaded routing or
-send readiness from the on-disk write. A missing route `enabled` differs
+candidate. Do not infer loaded routing or send readiness from the on-disk
+write. Canonical Bot Chat history does not qualify every own-default read path.
+
+History of a profile whose own multiplex flag is absent or false (HMP
+`test/flagless-profile-history`, root-reviewed, identical for absent and
+false): a root-created routed conversation reads canonically and shows in the
+Phone list (A); earlier history from that profile's standalone gateway is keyed
+`agent:main`, stays intact and is readable by session id, but the canonical read
+is empty (not an error) and the Phone list omits it (B). A later routed
+conversation opens a new session and leaves the earlier one unlinked. The
+route-only helper changed no profile byte, mtime, inode or mode and wrote no
+flag or history. The fixture seeds real native runner, store and database
+objects and reads canonical identity through them; it is not a gateway-loop,
+authorization, transport or live-host run. Provenance is one archive, not a Git
+checkout: its SHA cannot be attested, and it is bound only by read-bridge
+fingerprint `d45f9a132819e7b18c9a653323409f386ff272e1824b90d0899cf3d45f11f627`
+and source-tree digest
+`4cff27fe80ccdbf092fecce4d95d6a1a41ce3ba490add244a155c4196a82c12e`. Do not
+generalize it to other `ca705dbf` copies or builds. Route-only preparation is
+not a legacy-history migration: a flag change or history rewrite is not an
+authorized repair, and a safe fix needs a separate contract decision. The
+generic upstream request is a stable, profile-scoped read contract for legacy
+history that needs neither. Disposable-host gateway-loop and authorization
+qualification is still open; do not call all history qualified. Evidence file:
+`specs/005-new-profile-routing/C6-EVIDENCE.md` in that HMP branch. This entry is
+from HMP evidence, not a fresh upstream refresh. A missing route `enabled` differs
 from `enabled: null`; check the build's matcher rather than broadening a route.
 
 Per-bot sending on this deployment also requires the qualified root HMP send
