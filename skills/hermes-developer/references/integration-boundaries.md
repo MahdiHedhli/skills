@@ -77,8 +77,12 @@ config and history. Root routes remain loaded in the running gateway's config;
 profile rescan and plugin handler reload do not hot-refresh that table, while
 SIGUSR1 performs a drain and restart. Automatic new-bot enrollment needs a
 qualified route-activation primitive rather than merely a config write.
-HMP PR #52's routing command remains draft and its profile-flag write needs
-correction before deployment on this build. A missing route `enabled` differs
+HMP PR #52 at `4e270f0` corrects that profile-flag write: only the exact root
+route is written. Root and focused review cleared the configuration-write
+candidate, but disposable-host qualification remains open, including history
+reads for a profile without its own multiplex flag. Canonical Bot Chat history
+does not qualify every own-default read path. Do not infer loaded routing or
+send readiness from the on-disk write. A missing route `enabled` differs
 from `enabled: null`; check the build's matcher rather than broadening a route.
 
 Per-bot sending on this deployment also requires the qualified root HMP send
