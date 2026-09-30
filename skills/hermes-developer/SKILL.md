@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.26
+  version: 1.3.27
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -85,6 +85,12 @@ Confirm the exact installed commit, Plugin Doctor, compatibility, and fresh
 per-profile health after restart; verify one real client send separately.
 
 For gateway platform messages, distinguish task scheduling from durable admission. On the inspected experimental Hermes build, `_gateway_accepted` can be true before the later `AdmissionTicket` outcome. Wait for `admission_ticket.reported` where that API exists; treat `refused_other` as ambiguous when its reason is unavailable, since it can include `persist_failed`. Keep missing, unfamiliar, or timed-out outcomes under the same idempotency key without automatic retry, and add a local transcript observation only after confirmed admission. The older inspected stock-base `04fa849e` and experimental `7e8c8f07` session-chat streams lacked the approval notifier used by `/v1/runs`; untagged main `ac0cfa7` registered it and passed an isolated HMP real-gateway fixture, though no released build is qualified. Check the exact route and build before promising answerable Bot Chat prompts; see [integration boundaries](references/integration-boundaries.md#search-and-approval-privacy).
+
+For a source-qualified approval bridge, separate read/send compatibility from approval admission.
+An informational on-disk check does not prove the current process was admitted: the HMP draft
+binds a first-supported-factory baseline and requires a full process restart after source or
+plugin changes. Historical fixture passes predate this gate; see
+[integration boundaries](references/integration-boundaries.md#approval-process-qualification).
 
 For a mobile session picker or any check-then-read of a current session's messages, `SessionDB.get_session` and `get_messages` on `8afaab37` use separate read contexts, so an eligibility check followed by a read can race a fork or lineage change. Prefer an upstream transactional primitive over copied SQLite logic; see [session snapshot gap](references/integration-boundaries.md#session-snapshot-consistency).
 
