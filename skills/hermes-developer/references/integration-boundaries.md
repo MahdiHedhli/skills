@@ -444,14 +444,30 @@ qualification. See [Deliverable Mode](https://hermes-agent.nousresearch.com/docs
 [Adding Platform Adapters](https://hermes-agent.nousresearch.com/docs/developer-guide/adding-platform-adapters), and the exact source
 at [`api_server.py#L3463-L3489`](https://github.com/NousResearch/hermes-agent/blob/ca705dbf7ef86425b381b542712aff310f1ee52c/gateway/platforms/api_server.py#L3463-L3489).
 
-**Source-only helper findings** (archive provenance `ca705dbf`, no run; re-check per build):
-- The document helper has no size or type check and the image helper only a byte cap and magic, with
-  no scoped decode, pixel or EXIF policy observed. Enforce bounds before calling a helper.
-- Unset `media_text_inlined` on a `text/*` item makes the agent note say the content is included; set
-  `media_text_inlined=[False]` when the adapter did not inline it.
-- `merge_pending_message_event` can merge busy-session media into a queued event, and the persisted
-  row looks like a text projection with no stable attachment identity. Qualify both with a fixture
-  before claiming one send is one turn or that history shows the attachment.
+**Isolated native primitive evidence** (archive provenance `ca705dbf`, not a re-attested Git
+install; root reviewed and reproduced 73 checks, with 30 focused tests on HMP `9d91ca1`):
+- The document helper contained hostile filenames but has no size/type bound. Under umask 022
+  its file was 0644 and directory 0755; native does not enforce private cache modes. Newlines
+  survive in names and reach the prepared note. Enforce input bounds, generated names and
+  private storage before delivery. Inbound preparation trusts supplied media paths, so accept
+  only paths the plugin created in its scoped cache.
+- The image cap and magic check rejected cap+1 and invalid magic, but a magic-only undecodable
+  body was accepted. Enforce decode, pixel and metadata policy before the helper. Rejected-byte
+  content appeared in the helper's error; do not log or return that native error verbatim.
+- Unset/None `media_text_inlined` on text makes the same content-included claim as True, without
+  inlining. Set `[False]` when no content was inlined; binary notes ignore the flag.
+- The real runner queue method merges matching-scope PHOTO/TEXT; DOCUMENT uses FIFO. A merge
+  retains only the first client id. Different scope or gateway-control flags prevented merge.
+  The full busy authorization/ack/steer/admission path was not exercised.
+- Real flush helpers and SessionDB with controlled agent shapes stored document host-path notes
+  and projected image parts plus string override to caption plus `[screenshot]`, without media
+  identity. This was not a real agent turn or HMP read-back. Profile re-homing, model enrichment,
+  cache sweep and audio/video remain unproven; do not promise complete attachment history.
+
+This discovery does not qualify a supported release, freeze an upload contract or admit a live
+host. The fixture used disposable roots and Python socket denial, not an OS network sandbox.
+Recheck the exact target build and the complete adapter path before relying on these primitives.
+Evidence: [native fixture](https://github.com/MahdiHedhli/hermes-hmp/blob/test/phone-attachment-native-primitives/docs/research/phone-attachment-native-primitives-2026-09-30.md).
 
 **Canonical Bot Chat.** `api_server._session_chat_user_message` accepts text and image parts but
 rejects file parts. `_admit_to_live_bot_chat` returns `None` for a non-string message, and
