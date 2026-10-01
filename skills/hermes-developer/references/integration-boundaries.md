@@ -470,6 +470,17 @@ unsigned fixture result is not package, live host, device, memory or release adm
 receipt cannot qualify a combined plugin with a different digest, and a later manifest-only
 package must record its own digest and exact delta rather than relabel the original receipt.
 
+**Owner-local package derivation (2026-10-01).** [HMP draft PR #68](https://github.com/MahdiHedhli/hermes-hmp/pull/68)
+adds offline tooling for a private package with only the two `builds` arrays changed.
+The existing full final receipt validator runs against the clean integrated source;
+its receipt remains stale for the separately hashed package and is not waived or
+relabelled. Strict inventory/delta and the package's own exact-source parser checks
+bind the derivative. Root and Opus reverified the original candidate; 39 focused
+tool tests passed. `verify` reports hashes but does not pin a prior package: compare
+the returned tree/plugin/manifest digests to the reviewed record before admission.
+This is not a signature, live enablement or a release gate waiver. Check the running
+listener's executable/interpreter, not merely the CLI venv; those may differ.
+
 ## Chat media and attachments
 
 Root read-only source verification on 2026-09-30 against exact Hermes
@@ -590,3 +601,25 @@ Preserve durable pending state with no automatic retry.
 On source `8afaab3703e336d72a72c812dd2dd249f04f166a`, `SessionDB.get_session` and `get_messages` borrow separate read contexts and expose no public read transaction spanning both. A current-session eligibility check followed by a messages read can race a fork, lineage, or session mutation. Pre/post checks do not prove one snapshot (ABA: state can change and return). Prefer an upstream transactional selector-plus-messages primitive; do not bypass Hermes with copied private SQLite schema or lineage logic.
 
 [HMP PR #49](https://github.com/MahdiHedhli/hermes-hmp/pull/49) improves scoped canonical selection and per-request ref recheck but does not close this gap. [HMP PR #51](https://github.com/MahdiHedhli/hermes-hmp/pull/51) keeps extra session-browsing routes absent by default and requires an explicit boolean `true` opt-in for controlled testing; malformed or merely truthy config does not enable them and the picker stays hidden. That gate does not disable canonical Bot Chat.
+
+### Accepted local-media safety research (2026-10-01)
+
+- [HMP draft PR #66](https://github.com/MahdiHedhli/hermes-hmp/pull/66), `6470379`: descriptor-pinned
+  flat selected-profile cache traversal, no symlinks/hardlinks/non-regular files,
+  bounded reads and final binding/stat checks. Late mutation was repaired causally.
+  Coarse timestamps and trusted same-account writes can still yield torn bytes;
+  this is not an integrity guarantee or serving authorization.
+- [HMP draft PR #67](https://github.com/MahdiHedhli/hermes-hmp/pull/67), `8a74190`: immutable-buffer
+  PNG/JPEG/WebP structural subset, 8 MiB, 8192 edge, 20 MP declared dimensions,
+  static only, exact format end, 10000 units and 64 JPEG scans. An empty SOS
+  bounds error and many-scan availability case were repaired and independently
+  reviewed. This does not prove compressed-payload decodability or codec CPU time.
+- Public CDN bytes bypass the host prototype. The phone needs its own pre-decode
+  guard; [app draft PR #62](https://github.com/MahdiHedhli/HermesBotMobile/pull/62) is reviewed
+  source, not an installed build. No actual phone freeze was observed.
+- These are research boundaries, not a qualified media route. Opaque references
+  name candidates rather than grant authority. Fresh instance/profile/device/grant
+  and eligible active-history checks remain necessary; a partial call-ID window,
+  inode identity or `MEDIA:` text cannot supply authority. Cancellation does not
+  stop a worker thread, and concurrency permits must cover actual worker and
+  buffered transport lifetimes before any memory-envelope claim.
