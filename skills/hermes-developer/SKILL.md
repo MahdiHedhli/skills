@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.42
+  version: 1.3.43
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -78,7 +78,9 @@ When replacing a live platform plugin, check the gateway's active-work status
 before a drain-aware restart. An install into an isolated `HERMES_HOME` should
 use an isolated Hermes build: an installed source checkout's CLI bootstrap may
 first finish its own dependency or product update, even when the target home is
-temporary. `plugins doctor` can warn about missing declared dependencies while
+temporary. Target the installed plugin explicitly with `hermes plugins doctor <name-or-dir>`;
+on inspected `8afaab37`, omitting the argument inspects `.` and can report no manifest
+while exiting successfully. Inspect the result as well as the exit code. Doctor can warn about missing declared dependencies while
 the plugin is disabled; enable it, then check again. A plugin reload may leave
 an old adapter's runtime health snapshot in place until the gateway restarts.
 Confirm the exact installed commit, Plugin Doctor, compatibility, and fresh

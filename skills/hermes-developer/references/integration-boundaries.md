@@ -638,3 +638,19 @@ Native storage fixtures observed 71 expected outcomes; independent review passed
 there is no atomic snapshot or restore epoch. This is research, not a qualified
 network route or authorization primitive. Fresh device/profile/conversation grants
 and worker/buffer transport lifetime checks remain required in future serving code.
+
+## Explicit plugin Doctor target
+
+On source-qualified Hermes `8afaab37`, `hermes plugins doctor` defaults to the current
+directory. A directory without `plugin.yaml` can produce a Doctor error report even with
+exit status zero. For installed HMP, use `hermes plugins doctor hmp` and inspect the
+runtime discovery, manifest, import and registration findings. A successful Doctor run
+does not qualify a running approval or media lane. This was rechecked read-only on
+2026-10-01; no configuration, grant or scheduled job was changed.
+
+The [local-image draft contract](https://github.com/MahdiHedhli/hermes-hmp/blob/6186e55/docs/architecture/contracts/HMP_V1.md)
+now records an independently reviewed design, not implementation or serving proof. It
+keeps assistant `MEDIA:` text without file authority and derives opaque handles from
+scoped tool results. It requires a separate owner gate, an empty production manifest,
+loaded-start and fresh-disk qualification, and final native checks off the event loop.
+Its native lexical-prefix and Linux file-safety qualification gates remain open.
