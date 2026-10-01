@@ -744,9 +744,27 @@ requires both native and HMP source equality plus a primitive process-wide basel
 Hermes's module eviction/reload. Keep imports and disk work outside the anchor lock, bind actual
 module objects from this load rather than hard-coded sys.modules names, refuse import-shadowing
 forms, and use bounded no-follow regular-file readers. Consume a fresh off-loop qualification
-bool immediately before synchronous mint/prepare without an intervening await. This is reviewed
-design, not a gate implementation or media manifest entry; inherited loaded-bytecode equivalence
+bool immediately before synchronous mint/prepare without an intervening await. At first this was
+design only; the inert source is now accepted (next section). Inherited loaded-bytecode equivalence
 and approval-gate source/reload limitations remain separate residuals.
+
+#### Accepted inert media gate and native compression finding (HMP `0dd2a37`, 2026-10-01)
+
+The S6a source (`e5e6d40`) passed independent Opus review (one test-only `-B` bytecode coupling
+repaired) and a Sonnet delta review; 392 focused cases passed. The shipped manifest build list is
+empty and no production listener uses it, so it grants no admission. Lessons: pin the persistent
+anchor to stdlib objects with exact types; tie loader path/name to the spec origin and refuse
+leaf-symlink aliases; do not trust `BuildIdentity` alone (it is also set for unsupported results),
+so the binder must require `supported is True`. A `BaseException` can escape the factory.
+
+On the exact `8afaab37` build, publishing a compression child leaves the root hidden `1` and untitled,
+and the canonical title moves to the visible child; later transfers repeat. Requiring the
+titled row to be hidden would refuse a real compressed chat. The frozen proof (C6b) instead uses
+the unique native compression lineage equal to the parent chain, the hidden root, and one shared helper at
+mint and fetch that classifies both session kinds and closes on uncertainty in either. A replay of
+the public helpers (15 cases, 51 checks; no Agent, lease, model or gateway) accepted 23 and refused 28,
+including one known retitle accept: native title writers are trusted metadata. No binding, serving
+or build is accepted, and the `5e63839` component timing is not full binding cost or T12.
 
 The [bounded Linux file-leaf evidence](https://github.com/MahdiHedhli/hermes-hmp/blob/c0f2343/docs/research/local-media-linux-leaf-evidence-2026-10-01.md)
 passed root's independent 89-test plus 91-check run on non-root Linux CPython 3.14.7/tmpfs,
