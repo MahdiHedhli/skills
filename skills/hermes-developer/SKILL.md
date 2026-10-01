@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.35
+  version: 1.3.36
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -92,11 +92,11 @@ binds a first-supported-factory baseline and requires a full process restart aft
 plugin changes. Historical fixture passes predate this gate; see
 [integration boundaries](references/integration-boundaries.md#approval-process-qualification).
 
-When a fixture build fails before the gateway starts, treat it as a setup error, not a 45 s readiness failure. Retain child diagnostics only privately and keep raw logs and the environment out of reports; a passing partial rerun does not identify the original cause or qualify the full matrix. See [setup diagnostics](references/integration-boundaries.md#offline-fixture-setup-diagnostics) and HMP [PR #60](https://github.com/MahdiHedhli/hermes-hmp/pull/60).
+When a fixture build fails before the gateway starts, treat it as a setup error, not a 45 s readiness failure. Retain child diagnostics only privately and keep raw logs and the environment out of reports; a passing partial rerun does not identify the original cause or qualify the full matrix. The later unchanged combined fixture passed on exact `8afaab37` (HMP [PR #61](https://github.com/MahdiHedhli/hermes-hmp/pull/61)) as unsigned fixture-only evidence, with configured nonfatal 90-second stack diagnostics that did not trigger in this run, the 120 s deadline unchanged, and the original seed cause still unknown. See [setup diagnostics](references/integration-boundaries.md#offline-fixture-setup-diagnostics).
 
 For a mobile session picker or any check-then-read of a current session's messages, `SessionDB.get_session` and `get_messages` on `8afaab37` use separate read contexts, so an eligibility check followed by a read can race a fork or lineage change. Prefer an upstream transactional primitive over copied SQLite logic; see [session snapshot gap](references/integration-boundaries.md#session-snapshot-consistency).
 
-For chat media or attachments in a mobile extension, separate our renderer gap from upstream limits. On Hermes `ca705dbf`, a linked HTTPS Markdown image reaches mobile as text, and existing adapter cache helpers could support bounded native delivery after qualification, but bounds must be enforced before the helper (see the reference). The Desktop live-owner handoff accepts only strings; the session API normalizer accepts images but rejects file parts. Do not submit multimodal content through a skipped Desktop handoff or fall back silently to Phone chat. Do not enable browser control for attachments. See [chat media and attachments](references/integration-boundaries.md#chat-media-and-attachments).
+For chat media or attachments in a mobile extension, separate our renderer gap from upstream limits. A linked HTTPS Markdown image once reached mobile as literal text; that renderer gap is historical, and a public-CDN image now renders after an owner physical check. Local `MEDIA:` output remains text-only. On Hermes `ca705dbf`, existing adapter cache helpers could support bounded native delivery after qualification, but bounds must be enforced before the helper (see the reference). The Desktop live-owner handoff accepts only strings; the session API normalizer accepts images but rejects file parts. Do not submit multimodal content through a skipped Desktop handoff or fall back silently to Phone chat. Do not enable browser control for attachments. A native `MEDIA:` path check is not per-profile authority and an assistant string cannot authorize a host file read; the unresolved local-output research is in the reference. See [chat media and attachments](references/integration-boundaries.md#chat-media-and-attachments).
 
 ## Development and verification
 

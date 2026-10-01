@@ -443,18 +443,31 @@ This is fixture-tooling evidence, not runtime, release or device qualification.
 - Root passed 312 fixture/CI tests with configured Ruff clean. Three formerly failing T7 cases then
   passed fresh with zero errors or skips against exact Git `8afaab3703e336d72a72c812dd2dd249f04f166a`, with the source/plugin
   snapshot unchanged. That partial run wrote no final receipt and is not the 27-case, seven-stage,
-  runtime or release qualification. The original cause stays unknown.
+  runtime or release qualification (historical). The original cause stays unknown, and the natural stall was not triggered.
+- **Later full run.** The full, unchanged combined approval fixture on HMP
+  `f4730ebb901933f34c69c609e718f3984c6e62d9` (see [PR #61](https://github.com/MahdiHedhli/hermes-hmp/pull/61))
+  and independent Git Hermes `8afaab3703e336d72a72c812dd2dd249f04f166a` passed all seven stages and the
+  exact 27 integration cases with no errors, failures or skips. Root's current-receipt validation
+  returned final true, with fingerprints and exact JUnit cases bound. The receipt is unsigned and
+  fixture-only: not loaded-memory, live, release or device evidence, and the production manifest
+  stays empty. Configured nonfatal 90-second stack diagnostics did not trigger in this run
+  (deadline 120 s unchanged); this is not a runtime change, core dump or SIGABRT. A partial pass never qualifies by itself. The
+  archive/Git run differences above remain historical.
 - Still open: ambient parent environment reaching other helpers, unbounded in-memory capture,
-  and `--showlocals` exposure. A new complete qualification is pending. The archive and Git
-  lanes keep their separate gates.
+  and `--showlocals` exposure. The archive and Git lanes keep their separate gates.
 
 ## Chat media and attachments
 
 Root read-only source verification on 2026-09-30 against exact Hermes
 `ca705dbf7ef86425b381b542712aff310f1ee52c`; this is not a claim about other builds.
 
-**Rendering gap.** A linked HTTPS Markdown image string reaches mobile, but the mobile renderer
-shows it as literal text. That is our app gap. Do not treat all media as upstream-blocked.
+**Rendering gap (historical).** A linked HTTPS Markdown image string reached mobile, and the app
+then showed it as literal text. That was our app gap, not an upstream block. It is now addressed:
+the root-accepted renderer fix `dba5c93` ([app PR #57](https://github.com/MahdiHedhli/HermesBotMobile/pull/57))
+checks the allowed MIME type and the image signature independently, after a CDN response with a
+PNG header and JPEG bytes was rejected by an equality check. All other bounds, including
+security limits, are unchanged. An owner's physical iPhone render of a public-CDN image passed
+in a local dogfood build (not a TestFlight feature). Local `MEDIA:` output is still text-only.
 
 **Plugin building blocks.** Hermes already has `MessageEvent.media_urls` and `media_types`,
 the native `BasePlatformAdapter` send methods for image, file, video, document, and audio, and
@@ -505,6 +518,21 @@ a Bearer token, profile/principal/family binding, a one-shot download TTL, and i
 receipts. It is not durable chat history, so do not enable browser control for attachments.
 `_resolve_media_to_data_urls` converts bounded, validated `MEDIA` images for its own API
 completions only; it is not a Desktop mailbox or HMP persistent-history path.
+
+**Generic `MEDIA:` security (exact `8afaab37` source census).** Source: `gateway/platforms/base.py`
+`validate_media_delivery_path` (default non-strict mode accepts any existing regular file outside a
+denylist) with `_profile_cache_roots` and `_profile_dirs` (roots span other profiles).
+- Native validation is not per-profile HMP authority, and an assistant `MEDIA:` string cannot
+  authorize a host filesystem read.
+- Confining reads to the same profile's cache is insufficient: inbound handling and tools also
+  write there.
+- A possible local-output route needs producer-call/tool-row provenance before wire caps,
+  current authorized profile/session lineage, and descriptor-safe bounded reads. This is
+  unresolved research, not qualified, and no upstream API is promised or presumed blocked.
+- Mint-time copy, digest or inode checks do not establish authorization or cure a pre-existing
+  hardlinked secret. Require nlink 1, no-follow ancestors, and a confined descriptor plus
+  producer proof first.
+- Native upload-cache helper bounds and modes need separate qualification (see above).
 
 **Design requirements.** Use profile-, conversation-, and device-bound opaque handles with native
 validation. Offer no raw-path endpoint and no text-grant authority. Never forward Hermes or
