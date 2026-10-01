@@ -653,7 +653,7 @@ now records an independently reviewed design, not implementation or serving proo
 keeps assistant `MEDIA:` text without file authority and derives opaque handles from
 scoped tool results. It requires a separate owner gate, an empty production manifest,
 loaded-start and fresh-disk qualification, and final native checks off the event loop.
-Its exact-build lexical-prefix observation is now accepted as described below; Linux file-safety and serving qualification remain open.
+Its exact-build lexical-prefix observation and bounded Linux file-leaf run are now accepted as described below; native serving and broader platform qualification remain open.
 
 ### Lexical producer evidence and inert delivery components
 
@@ -674,7 +674,7 @@ normalize an untrusted candidate into eligibility, and keep the subsequent no-fo
 file checks, live authorization, row rescan and raster bounds. A passing prefix test
 is not file authority or endpoint qualification.
 
-HMP `747339f` has reviewed inert guards, a bounded result parser, process-local
+HMP `c0f2343` has reviewed inert guards, a bounded result parser, process-local
 reference registry and non-wire carrier. The carrier is an immutable slots object, not a
 wire dataclass or mapping: accidental generic serialization refuses it. It holds only
 candidate row ids and canonical tool digests, never paths or raw results. Its accepted extractor
