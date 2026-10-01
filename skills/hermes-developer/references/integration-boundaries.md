@@ -307,6 +307,33 @@ then prefer a narrow Git-maintenance workaround and verify the resulting pin,
 gateway startup, and HMP compatibility. Do not treat the installer message's
 suggested recursive permission change as the diagnosis of a vanished file.
 
+## Exact-build jobs qualification and install consent
+
+Keep three findings apart: (1) a diagnosed missing jobs endpoint (installed plugin
+lacks the routes), (2) the jobs feature flag being off, and (3) per-phone host
+controls not granted. Fixing one does not imply the others.
+
+Qualification scope for HMP draft PR #71 on Hermes `ca705dbf` (cron fingerprint
+`382a68a0…c889d2`, added after qualification): 11 native cases passed with no
+skips, deadlines or leftovers (stock writer, paused-job CRUD, profile isolation,
+key, permission and corrupt-store fixtures, plus read and direct-send cases), and
+two bridge checks passed. The original wrapper run failed solely on a 49-byte
+ignored startup marker that the exact source writes; code, runtime and
+dependencies were unchanged. Keep the original report, cite the separate
+supplement accepted by independent review (`FUNCTIONAL_ALL_PASS_WITH_EXPECTED_STARTUP_STAMP_DELTA`),
+and do not call the original run an unqualified clean pass. This does not
+qualify scheduler delivery, continuity or phone UI.
+
+Install consent: the normal native `plugins install <source> --force --ref <full-sha>`
+with the scanner enabled refused the plugin's declared `qrcode` dependency in a
+non-interactive run, before replacing the active plugin. An interactive run with
+exact consent from the person managing the host succeeded. Do not use scanner
+bypass, allow-removed or no-deps options, and do not prescribe blind "yes".
+Afterward verify plugin Doctor, tracked runtime files against source, a
+drain-aware restart once active agents are zero, compat, listener and per-bot
+health. In the LLY520 check, aggregate health failed because a different bot's send endpoint was unavailable; Belac's send endpoint was ready. Diagnose each reported state rather than treating aggregate health as proof that a selected bot works. Installing
+leaves jobs, the cron flag and per-phone grants as separate owner decisions.
+
 ## Pairing failure guidance
 
 The HMP mobile client's F19 pairing-error change distinguishes transport

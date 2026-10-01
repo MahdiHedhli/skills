@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.49
+  version: 1.3.50
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -63,6 +63,8 @@ For profile-scoped send routes, validate the target profile's own API server key
 Treat a read-only host setup check as a prerequisite check, not a per-bot send guarantee. Verify each served profile's route, secret scope, and authorization separately before enabling writes. A newly created profile can be served yet lack its exact root `hmp` route (`not_routed`). On `ca705dbf`, its own multiplex flag is not required and changing it affects chat storage; root routes do not hot-refresh on profile rescan. Route-only preparation does not make earlier standalone-profile history canonically readable (root-reviewed fixture, one archive build; see the C6 split in the reference). Remote owner access cards, automatic scoped credentials and safe native settlement need separate contracts; see [integration boundaries](references/integration-boundaries.md).
 
 When a paired device can perform persistent host actions such as scheduling jobs or changing a bot's default model, require a separate per-device host decision. Pairing and Bot Chat grants do not imply this privilege, even when devices share a user. Default new devices to denied, make the host prompt unambiguous so an earlier yes/no answer cannot grant controls, and provide an explicit host-only way to revoke the decision. Test the denial and grant at the actual route gate; see [integration boundaries](references/integration-boundaries.md).
+
+A missing jobs endpoint, a disabled jobs feature flag and absent per-phone controls are different findings; diagnose each separately. An exact-build qualification covers only the tested build and fingerprint, not scheduler delivery, continuity or phone UI. On inspected Hermes `ca705dbf`, a plugin install that needs a declared Python dependency stops for interactive PM consent; inspect that exact dependency request before answering and keep the scanner enabled. Details are in [integration boundaries](references/integration-boundaries.md#exact-build-jobs-qualification-and-install-consent).
 
 For pairing failures, distinguish an unreachable host from a received error on an instance-pinned connection. A connection failure does not prove that Tailscale is down; a 5xx does not prove the offer is bad or that a P4 activation did not occur. Suggest a fresh offer only for an identified code or offer problem, and do not automatically retry an uncertain P4 result. See [integration boundaries](references/integration-boundaries.md).
 
