@@ -524,14 +524,31 @@ completions only; it is not a Desktop mailbox or HMP persistent-history path.
 denylist) with `_profile_cache_roots` and `_profile_dirs` (roots span other profiles).
 - Native validation is not per-profile HMP authority, and an assistant `MEDIA:` string cannot
   authorize a host filesystem read.
-- Confining reads to the same profile's cache is insufficient: inbound handling and tools also
-  write there.
-- A possible local-output route needs producer-call/tool-row provenance before wire caps,
-  current authorized profile/session lineage, and descriptor-safe bounded reads. This is
-  unresolved research, not qualified, and no upstream API is promised or presumed blocked.
+- Same-profile cache location alone is not authority: inbound handling and tools also write there.
+- Root trust decision (supersedes "producer proof first"): rely on the existing trusted Hermes
+  database records. An eligible local-output candidate is an active `image_generate` tool row plus its
+  assistant call row linked by call id, from the selected profile's database, with the *executing* tool
+  name taken from the tool row, and parsed from the uncapped result before any wire cap. A cache file
+  without such a row is never authority. No cryptographic producer proof and no new hook is required.
+  The row is Hermes-recorded history (branches, imports and compaction can reproduce it), not proof of
+  new generation or of the file's bytes.
+- Never grant from a `MEDIA:` string, a cache location or the native broad validator. Native file, row,
+  authorization and lineage races (history rewrite/restore, filesystem and raster hazards, profile
+  and grant races) remain qualification work; require nlink 1, no-follow ancestors, a confined
+  descriptor and strict bounded raster validation. Unresolved research, not qualified; no upstream
+  API is promised or presumed blocked.
+- G1 evidence (HMP draft [PR #62](https://github.com/MahdiHedhli/hermes-hmp/pull/62), commit `5a688c7`;
+  root-accepted research on the independent Git `8afaab37` build, synthetic model and provider,
+  real native turn/dispatch/`SessionDB` paths; Phone via an inert stand-in adapter, not `HmpAdapter`):
+  tool row `tool_call_id` matched the assistant call id and carried `image_generate`. With default
+  deferred tools the Desktop assistant call was named `tool_call` while the tool row was
+  `image_generate`, so match by id and tool-row name; only that single-entry shape was seen, not a
+  modern `calls` array or the Phone default. The raw result parsed whole but its first 4000 characters
+  did not. A failed tool-row flush left the cache file and assistant call row with no tool row, and the
+  Phone path still sent media. G2-G4, native media network, security, cap, grant and wire behavior
+  were not run. The earlier `ca705dbf` archive fixture is a different build and does not transfer.
 - Mint-time copy, digest or inode checks do not establish authorization or cure a pre-existing
-  hardlinked secret. Require nlink 1, no-follow ancestors, and a confined descriptor plus
-  producer proof first.
+  hardlinked secret.
 - Native upload-cache helper bounds and modes need separate qualification (see above).
 
 **Design requirements.** Use profile-, conversation-, and device-bound opaque handles with native
