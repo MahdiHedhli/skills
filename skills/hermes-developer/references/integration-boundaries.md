@@ -711,3 +711,29 @@ status paths remain separate follow-ons; do not describe this as complete lifecy
 coverage or qualify approvals/crypto/release from it. A storage failure can leave only
 the switcher diagnostic rejection field empty while the in-memory state/view remains
 correct; that accepted residual does not add authority.
+
+
+### Optional media reads and mint cost (2026-10-01)
+
+HMP draft [#70](https://github.com/MahdiHedhli/hermes-hmp/pull/70), `c0f2343`, now has
+independently accepted shared native-query and read-core plumbing. Four optional media twins
+return a non-wire sidecar; old wrappers keep their native call pattern. Native metadata that
+cannot fit the bounded carrier downgrades only that sidecar, preserving successful text.
+Root and an independent reviewer each passed 833 focused cases (three preexisting
+no-Hermes-build skips). Static golden bodies, native call events, baseline tables and observation
+sets were independently regenerated from `575a9bc`; they do not rely only on old/new agreement.
+No production handler selects the twins yet. Dynamic imports are outside the syntactic pins.
+
+Do not repeat a full native history scan for every descriptor. An exact `8afaab37` disposable
+4096-row fixture measured 128 sequential scans at median 9.11 seconds near the scanner's
+processing budget; native materialization includes uncharged content, so this is not an upper
+bound. The [C6 conditional design](https://github.com/MahdiHedhli/hermes-hmp/blob/2c5bcbb/specs/011-local-image-serving/ROOT_DECISIONS.md#c6-descriptor-mint-batch-freeze-2026-10-01)
+uses one fresh request-scoped batch with independently evaluated selectors. It keeps every
+fetch's single scan/recheck and authorization intact. Batch source review, native cost and
+mint-memory admission remain open; no cache, registry hit or assistant path grants authority.
+
+The [bounded Linux file-leaf evidence](https://github.com/MahdiHedhli/hermes-hmp/blob/c0f2343/docs/research/local-media-linux-leaf-evidence-2026-10-01.md)
+passed root's independent 89-test plus 91-check run on non-root Linux CPython 3.14.7/tmpfs,
+with unchanged source and isolated scratch cleanup. This qualifies only that file-reader slice
+and platform scope, not native HMP serving, other filesystems, raster decoding, a process
+manifest, memory ceilings or a phone build. Full serving and device gates remain open.
