@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.34
+  version: 1.3.35
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -91,6 +91,8 @@ An informational on-disk check does not prove the current process was admitted: 
 binds a first-supported-factory baseline and requires a full process restart after source or
 plugin changes. Historical fixture passes predate this gate; see
 [integration boundaries](references/integration-boundaries.md#approval-process-qualification).
+
+When a fixture build fails before the gateway starts, treat it as a setup error, not a 45 s readiness failure. Retain child diagnostics only privately and keep raw logs and the environment out of reports; a passing partial rerun does not identify the original cause or qualify the full matrix. See [setup diagnostics](references/integration-boundaries.md#offline-fixture-setup-diagnostics) and HMP [PR #60](https://github.com/MahdiHedhli/hermes-hmp/pull/60).
 
 For a mobile session picker or any check-then-read of a current session's messages, `SessionDB.get_session` and `get_messages` on `8afaab37` use separate read contexts, so an eligibility check followed by a read can race a fork or lineage change. Prefer an upstream transactional primitive over copied SQLite logic; see [session snapshot gap](references/integration-boundaries.md#session-snapshot-consistency).
 

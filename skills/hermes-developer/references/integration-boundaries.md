@@ -425,6 +425,29 @@ Git HEAD is metadata, not object-store integrity or loaded-module attestation. A
 Python 3.11/3.12 symlink-loop exception can surface in direct-send handling but grants no
 capability; that availability limitation remains recorded outside this fix.
 
+### Offline fixture setup diagnostics
+
+Evidence: HMP draft [PR #60](https://github.com/MahdiHedhli/hermes-hmp/pull/60) at `d8b8b08`
+and its Amendment 4 (`specs/005-approval-process-matrix/amendment-4-setup-diagnostics.md`).
+This is fixture-tooling evidence, not runtime, release or device qualification.
+
+- Separate an offline fixture-seed setup error, which happens before any gateway starts, from a
+  real 45 s listener-readiness failure. They need different diagnosis and fixes.
+- `subprocess.run(capture_output=True, check=True)` keeps stdout/stderr on `CalledProcessError`,
+  but an ordinary failure report may omit them; retain them privately before the process exits.
+  Pytest traceback frames can also serialize a helper's caller environment. Never dump raw logs
+  or environment into reports.
+- Retain diagnostics only in a validated private directory through a held descriptor, with a
+  0600 file, and give the child an explicit environment allowlist. Both are separate from
+  bounding parent RAM: a 64 KiB retained tail does not limit `capture_output` memory.
+- Root passed 312 fixture/CI tests with configured Ruff clean. Three formerly failing T7 cases then
+  passed fresh with zero errors or skips against exact Git `8afaab3703e336d72a72c812dd2dd249f04f166a`, with the source/plugin
+  snapshot unchanged. That partial run wrote no final receipt and is not the 27-case, seven-stage,
+  runtime or release qualification. The original cause stays unknown.
+- Still open: ambient parent environment reaching other helpers, unbounded in-memory capture,
+  and `--showlocals` exposure. A new complete qualification is pending. The archive and Git
+  lanes keep their separate gates.
+
 ## Chat media and attachments
 
 Root read-only source verification on 2026-09-30 against exact Hermes
