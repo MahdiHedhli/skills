@@ -542,8 +542,14 @@ denylist) with `_profile_cache_roots` and `_profile_dirs` (roots span other prof
   real native turn/dispatch/`SessionDB` paths; Phone via an inert stand-in adapter, not `HmpAdapter`):
   tool row `tool_call_id` matched the assistant call id and carried `image_generate`. With default
   deferred tools the Desktop assistant call was named `tool_call` while the tool row was
-  `image_generate`, so match by id and tool-row name; only that single-entry shape was seen, not a
-  modern `calls` array or the Phone default. The raw result parsed whole but its first 4000 characters
+  `image_generate`, so match by id and tool-row name. Follow-up HMP draft [PR #63](https://github.com/MahdiHedhli/hermes-hmp/pull/63)
+  (commit `97316ad`, same build, Desktop and Phone, same stand-in limits): a one-entry `calls` bridge executes
+  and records an `image_generate` row; a two-local-entry batch is rejected before any provider call, and its
+  error row is not a candidate. A matching call id alone is not execution proof; require the recorded executing
+  tool name plus the strict success shape, not the assistant call name `tool_call`. For the bridged Phone result
+  native auto-append sent 0 media (a different shape from the direct path, not a contradiction; why it keys on the outer assistant call name is source inference, not an isolated experiment), so do not
+  assume native delivery; the root architecture needs no upstream delivery hook for a history-based HMP route,
+  which is unimplemented and unqualified. The raw result parsed whole but its first 4000 characters
   did not. A failed tool-row flush left the cache file and assistant call row with no tool row, and the
   Phone path still sent media. G2-G4, native media network, security, cap, grant and wire behavior
   were not run. The earlier `ca705dbf` archive fixture is a different build and does not transfer.
