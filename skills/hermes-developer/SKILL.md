@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.39
+  version: 1.3.40
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -91,6 +91,13 @@ An informational on-disk check does not prove the current process was admitted: 
 binds a first-supported-factory baseline and requires a full process restart after source or
 plugin changes. Historical fixture passes predate this gate; see
 [integration boundaries](references/integration-boundaries.md#approval-process-qualification).
+
+When combining an approval bridge with persistent host controls, keep the approval owner gate
+separate: an explicit controls grant alone does not imply approval ownership, while a host denial
+can close an otherwise allowlisted owner. Fixtures that intentionally exercise owner approval
+must explicitly enroll their primary device; generic pairing should retain its denied default.
+The integrated draft passed a fresh full exact-build fixture matrix, but still needs separate
+owner-local packaging and device acceptance; see the reference.
 
 When a fixture build fails before the gateway starts, treat it as a setup error, not a 45 s readiness failure. Retain child diagnostics only privately and keep raw logs and the environment out of reports; a passing partial rerun does not identify the original cause or qualify the full matrix. The later unchanged combined fixture passed on exact `8afaab37` (HMP [PR #61](https://github.com/MahdiHedhli/hermes-hmp/pull/61)) as unsigned fixture-only evidence, with configured nonfatal 90-second stack diagnostics that did not trigger in this run, the 120 s deadline unchanged, and the original seed cause still unknown. See [setup diagnostics](references/integration-boundaries.md#offline-fixture-setup-diagnostics).
 

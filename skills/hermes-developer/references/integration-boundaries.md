@@ -456,6 +456,20 @@ This is fixture-tooling evidence, not runtime, release or device qualification.
 - Still open: ambient parent environment reaching other helpers, unbounded in-memory capture,
   and `--showlocals` exposure. The archive and Git lanes keep their separate gates.
 
+**Integrated approval/host-controls checkpoint (2026-10-01).** HMP [draft PR #65](https://github.com/MahdiHedhli/hermes-hmp/pull/65)
+preserves the app's cron/model/per-bot-send features and keeps approval ownership narrower than
+the persistent-controls gate: configured owner allowlist AND no explicit host denial. Granting
+controls alone does not open approval routes. A generic pairing fixture's explicit denial caused
+15 owner refusals in a full run; the correction opts in only the primary device in approval
+fixtures, leaving generic pairing and production permissions unchanged. Root verified a fresh
+full Git-install matrix at `f584b91c5b5b157444b3875528ec034c6b83c4f9` against independent
+Hermes `8afaab3703e336d72a72c812dd2dd249f04f166a`/Python 3.14.7: all seven stages and exactly
+27 required gateway cases passed, with zero failures, errors or skips. The current-source
+receipt and JUnit were independently checked. Both production write lists remain empty; this
+unsigned fixture result is not package, live host, device, memory or release admission. An old
+receipt cannot qualify a combined plugin with a different digest, and a later manifest-only
+package must record its own digest and exact delta rather than relabel the original receipt.
+
 ## Chat media and attachments
 
 Root read-only source verification on 2026-09-30 against exact Hermes
