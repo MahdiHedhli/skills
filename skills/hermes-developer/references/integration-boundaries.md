@@ -674,10 +674,33 @@ normalize an untrusted candidate into eligibility, and keep the subsequent no-fo
 file checks, live authorization, row rescan and raster bounds. A passing prefix test
 is not file authority or endpoint qualification.
 
-HMP `575a9bc` has reviewed inert guards, a bounded result parser and process-local
-reference registry. App `7681eb9` has reviewed descriptors, pinned binary reads, an
-independent cancellable loader and a tap-to-load card. No production screen binds
-that loader and no host route serves the files yet. Keep shared image limits until
+HMP `6ba4489` has reviewed inert guards, a bounded result parser, process-local
+reference registry and non-wire carrier. The carrier is an immutable slots object, not a
+wire dataclass or mapping: accidental generic serialization refuses it. It holds only
+candidate row ids and canonical tool digests, never paths or raw results. App `c0642a0`
+now binds the loader to a captured Bot Chat instance/epoch and injects cards for typed
+tool-row descriptors in branch source. No host route serves the files yet. Keep shared image limits until
 the particular network request settles and native decoding finishes, including after
 cancel. Transfer viewer-clone ownership exactly once, including before-first-build
 route teardown. These findings do not waive live admission or device/release checks.
+
+## Client lifecycle reporting
+
+An isolated real-client fixture at app `7681eb9` confirmed that Bot Chat and prompt
+reads can receive bearer revocation, retire the token manager and leave the instance
+labelled usable because those paths did not report the existing lifecycle event.
+Later local StaleWriteScope failures cannot recover the original answer. A Bot Chat
+pin mismatch also missed identity-change reporting. Host refusal and key pinning still
+held; this was a state/cleanup defect, not unauthorized host access.
+
+The focused [app repair](https://github.com/MahdiHedhli/HermesBotMobile/pull/64),
+`5347d0c`, is independently reviewed source, not a deployed result. Capture the write
+scope before transport, classify only the existing definitive lifecycle mappings,
+report through that scope before returning/swallowing the original error, and record
+rejection evidence only after a transition belonging to the captured epoch. Preserve
+existing retention and transient/bot-scoped behavior. Causal real-client, stale-re-pair
+and switch tests distinguish this from merely testing the classifier. Direct send and
+status paths remain separate follow-ons; do not describe this as complete lifecycle
+coverage or qualify approvals/crypto/release from it. A storage failure can leave only
+the switcher diagnostic rejection field empty while the in-memory state/view remains
+correct; that accepted residual does not add authority.
