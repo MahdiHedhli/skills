@@ -729,8 +729,24 @@ Do not repeat a full native history scan for every descriptor. An exact `8afaab3
 processing budget; native materialization includes uncharged content, so this is not an upper
 bound. The [C6 conditional design](https://github.com/MahdiHedhli/hermes-hmp/blob/2c5bcbb/specs/011-local-image-serving/ROOT_DECISIONS.md#c6-descriptor-mint-batch-freeze-2026-10-01)
 uses one fresh request-scoped batch with independently evaluated selectors. It keeps every
-fetch's single scan/recheck and authorization intact. Batch source review, native cost and
-mint-memory admission remain open; no cache, registry hit or assistant path grants authority.
+fetch's single scan/recheck and authorization intact. The inert batch is independently accepted
+at HMP `f1bc986`: original focused checks passed 563 cases and the hardening delta passed 232.
+The [root-run native batch measurement](https://github.com/MahdiHedhli/hermes-hmp/blob/5e63839/docs/research/local-media-native-batch-cost-evidence-2026-10-01.md)
+observed 71.93 ms for 128 selectors in the near-budget shape, with 33 pages and two active-id
+calls independent of selector count. All twelve native concurrent-writer controls passed. A
+42.99 MB uncharged-content fixture and registry mint memory were measured separately. These are
+component observations, not native allocation bounds, full eligibility/handler cost, T12 or
+serving admission. C6b binding and process/device qualification remain open; no cache, registry
+hit or assistant path grants authority.
+
+The [S6 gate design](https://github.com/MahdiHedhli/hermes-hmp/blob/f1bc986/specs/011-local-image-serving/ROOT_DECISIONS.md#s6-media-qualification-design-freeze-2026-10-01)
+requires both native and HMP source equality plus a primitive process-wide baseline that survives
+Hermes's module eviction/reload. Keep imports and disk work outside the anchor lock, bind actual
+module objects from this load rather than hard-coded sys.modules names, refuse import-shadowing
+forms, and use bounded no-follow regular-file readers. Consume a fresh off-loop qualification
+bool immediately before synchronous mint/prepare without an intervening await. This is reviewed
+design, not a gate implementation or media manifest entry; inherited loaded-bytecode equivalence
+and approval-gate source/reload limitations remain separate residuals.
 
 The [bounded Linux file-leaf evidence](https://github.com/MahdiHedhli/hermes-hmp/blob/c0f2343/docs/research/local-media-linux-leaf-evidence-2026-10-01.md)
 passed root's independent 89-test plus 91-check run on non-root Linux CPython 3.14.7/tmpfs,
