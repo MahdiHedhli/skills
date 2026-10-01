@@ -653,4 +653,31 @@ now records an independently reviewed design, not implementation or serving proo
 keeps assistant `MEDIA:` text without file authority and derives opaque handles from
 scoped tool results. It requires a separate owner gate, an empty production manifest,
 loaded-start and fresh-disk qualification, and final native checks off the event loop.
-Its native lexical-prefix and Linux file-safety qualification gates remain open.
+Its exact-build lexical-prefix observation is now accepted as described below; Linux file-safety and serving qualification remain open.
+
+### Lexical producer evidence and inert delivery components
+
+On exact Hermes `8afaab3703e336d72a72c812dd2dd249f04f166a`, root's isolated
+[producer fixture](https://github.com/MahdiHedhli/hermes-hmp/blob/f9c542b/docs/research/local-media-lexical-evidence-2026-10-01.md)
+compares the uncapped persisted `image` string with the actual native
+`GatewayRunner._routed_profile_home(profile)` string plus `/cache/images/`. Three
+positive Desktop/Phone-stand-in/deferred-tool flows matched that prefix and one flat
+128-byte-bounded name; the other profile's prefix did not match. Native source remained
+clean and unchanged. This is one build, the real `save_b64_image` primitive, a synthetic
+provider and one scratch layout: other producer spellings, symlinked home layouts and
+Linux file behavior are not qualified.
+
+For media admission, verify this lexical fact separately from `Path(image).parent`
+equality. Path equality can normalize repeated separators and dot segments; it does
+not establish exact producer spelling or resolve arbitrary symlink spellings. Never
+normalize an untrusted candidate into eligibility, and keep the subsequent no-follow
+file checks, live authorization, row rescan and raster bounds. A passing prefix test
+is not file authority or endpoint qualification.
+
+HMP `575a9bc` has reviewed inert guards, a bounded result parser and process-local
+reference registry. App `7681eb9` has reviewed descriptors, pinned binary reads, an
+independent cancellable loader and a tap-to-load card. No production screen binds
+that loader and no host route serves the files yet. Keep shared image limits until
+the particular network request settles and native decoding finishes, including after
+cancel. Transfer viewer-clone ownership exactly once, including before-first-build
+route teardown. These findings do not waive live admission or device/release checks.
