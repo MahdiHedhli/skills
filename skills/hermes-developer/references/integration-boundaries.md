@@ -616,10 +616,25 @@ On source `8afaab3703e336d72a72c812dd2dd249f04f166a`, `SessionDB.get_session` an
   reviewed. This does not prove compressed-payload decodability or codec CPU time.
 - Public CDN bytes bypass the host prototype. The phone needs its own pre-decode
   guard; [app draft PR #62](https://github.com/MahdiHedhli/HermesBotMobile/pull/62) is reviewed
-  source, not an installed build. No actual phone freeze was observed.
+  source, now installed as local owner build 2026100101. The artifact and signature checks passed;
+  the locked phone refused automatic launch. No new physical rendering or freeze observation is claimed.
 - These are research boundaries, not a qualified media route. Opaque references
   name candidates rather than grant authority. Fresh instance/profile/device/grant
   and eligible active-history checks remain necessary; a partial call-ID window,
   inode identity or `MEDIA:` text cannot supply authority. Cancellation does not
   stop a worker thread, and concurrency permits must cover actual worker and
   buffered transport lifetimes before any memory-envelope claim.
+
+### Accepted active-history image linkage research (2026-10-01)
+
+[HMP draft #69](https://github.com/MahdiHedhli/hermes-hmp/pull/69), b32d913, scans
+the whole active tip in pages of 128 with a 4096-row and 4 MiB inspected-value
+cap, brackets active IDs and tip, and rereads the selected call/result digests.
+Observed single legacy and modern image bridge shapes are admitted; malformed
+calls or ambiguous IDs refuse the artifact. Production-facing callback errors
+close without private exception text and the ID cap precedes element iteration.
+Native storage fixtures observed 71 expected outcomes; independent review passed
+28 unit cases and causal repair checks. Native materialization remains uncapped;
+there is no atomic snapshot or restore epoch. This is research, not a qualified
+network route or authorization primitive. Fresh device/profile/conversation grants
+and worker/buffer transport lifetime checks remain required in future serving code.
