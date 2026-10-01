@@ -551,8 +551,16 @@ denylist) with `_profile_cache_roots` and `_profile_dirs` (roots span other prof
   assume native delivery; the root architecture needs no upstream delivery hook for a history-based HMP route,
   which is unimplemented and unqualified. The raw result parsed whole but its first 4000 characters
   did not. A failed tool-row flush left the cache file and assistant call row with no tool row, and the
-  Phone path still sent media. G2-G4, native media network, security, cap, grant and wire behavior
-  were not run. The earlier `ca705dbf` archive fixture is a different build and does not transfer.
+  Phone path still sent media. The earlier `ca705dbf` archive fixture is a different build and does not transfer.
+- G2 storage evidence (HMP draft [PR #64](https://github.com/MahdiHedhli/hermes-hmp/pull/64), commit `b437888`;
+  root-accepted, synthetic seed, native `SessionDB` methods only; not generation, `HmpAdapter`, authorization or
+  service qualification): an active call/result pair can retire or re-clone, and a closed compression parent keeps
+  active rows, so check active rows at the current tip at request time. An imported session with a parent edge can
+  change the resume tip, and foreign image values are stored verbatim, so stored values are not serving authority.
+  A same-inode restore rolled back row ids, generation and rewind count while the examined file identity stayed unchanged: never
+  invent a monotonic epoch. Sampled sequential reads give no atomic-snapshot claim. Branch handlers, a different-file
+  or swapped-inode restore and concurrency remain open. No new producer hook is required; local `MEDIA:` text is still
+  unsupported. G3, G4, native media network, security, cap, grant and wire behavior were not run.
 - Mint-time copy, digest or inode checks do not establish authorization or cure a pre-existing
   hardlinked secret.
 - Native upload-cache helper bounds and modes need separate qualification (see above).
