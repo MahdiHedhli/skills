@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.45
+  version: 1.3.46
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:

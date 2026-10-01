@@ -674,15 +674,22 @@ normalize an untrusted candidate into eligibility, and keep the subsequent no-fo
 file checks, live authorization, row rescan and raster bounds. A passing prefix test
 is not file authority or endpoint qualification.
 
-HMP `6ba4489` has reviewed inert guards, a bounded result parser, process-local
+HMP `747339f` has reviewed inert guards, a bounded result parser, process-local
 reference registry and non-wire carrier. The carrier is an immutable slots object, not a
 wire dataclass or mapping: accidental generic serialization refuses it. It holds only
-candidate row ids and canonical tool digests, never paths or raw results. App `c0642a0`
+candidate row ids and canonical tool digests, never paths or raw results. Its accepted extractor
+bounds the newest 128 returned image-tool attempts before parsing; a rejection receives no older
+backfill. These are hints for a later active-history rescan, not file authority. App `8d32657`
 now binds the loader to a captured Bot Chat instance/epoch and injects cards for typed
 tool-row descriptors in branch source. No host route serves the files yet. Keep shared image limits until
 the particular network request settles and native decoding finishes, including after
 cancel. Transfer viewer-clone ownership exactly once, including before-first-build
-route teardown. These findings do not waive live admission or device/release checks.
+route teardown. A first image 404 may join one existing read-only refresh and refetch once.
+Idempotent minting can return the same handle, so freshness is the same tool row being replaced by
+a newly parsed row under the captured binding, not handle inequality or refresh completion. A
+tail append preserves the existing row and permits no retry; cancellation ends the wait without
+auto-resume. The reviewed app branch passes 99 focused card/screen cases, but this is no host
+serving or device claim. These findings do not waive live admission or device/release checks.
 
 ## Client lifecycle reporting
 
