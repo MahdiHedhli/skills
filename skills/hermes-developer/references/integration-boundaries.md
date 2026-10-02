@@ -871,6 +871,27 @@ by the fresh-screen baseline and identity fences; physical OS/device behavior st
 awaits owner testing. No live exposure, public release, operational approvals or push
 delivery is claimed.
 
+### Explicit refresh must reconcile released sends (2026-10-02)
+
+Source inspection found that a transcript reload did not reconcile a released unconfirmed send,
+despite the frozen recovery contract. The [app repair `0ae5667`](https://github.com/MahdiHedhli/HermesBotMobile/commit/0ae5667bea8b1e339517823471e49834f2c423e3)
+is independently reviewed and installed in signed owner dogfood build `2026100204`, with device
+metadata verified. It takes the existing pending-action key, captures the original ID, foreground,
+profile, sequence and pairing write scope, and performs at most one read-only status lookup per
+explicit refresh. Automatic tail polling never performs this lookup. Exact server-row client-ID
+proof or accepted/queued status can settle; matching text alone, unknown, submitted, not accepted
+and superseded replies retain evidence. Rejection preserves the editable draft. No POST, new ID,
+automatic resend or transcript hiding is added.
+
+A failed fresh read can retain prior server rows; they are not saved-conversation cache rows.
+Definitive revocation must be reported through the pre-transport scope before it is swallowed.
+Root passed three refresh invariants, independent review passed 266 selected client cases, and
+the final dismiss file passed 37; removing the lifecycle report kills the permanent revocation
+regression. A queued footer can persist until another live row or reopen, and a superseded refresh
+can conservatively leave evidence for another check. These residuals never authorize a resend.
+The owner's physical outcome remains unconfirmed. This finding does not refresh the Sept 28
+upstream snapshot or make approvals, priority push, host media or uploads operational.
+
 ### Optional media reads and mint cost (2026-10-01)
 
 HMP draft [#70](https://github.com/MahdiHedhli/hermes-hmp/pull/70), `c0f2343`, now has
