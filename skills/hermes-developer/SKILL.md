@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.52
+  version: 1.3.53
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -118,7 +118,7 @@ needs the existing instance transition reported through a scope captured before 
 Report the original definitive failure before swallowing or rethrowing it; subsequent local
 StaleWriteScope failures cannot reconstruct the missed event. A late response must not wipe or
 label a newer pairing. Keep transient/bot-scoped behavior unchanged and distinguish a reviewed
-read-path repair from uncovered send/status paths; see the [integration boundaries](references/integration-boundaries.md#client-lifecycle-reporting).
+read-path repair from send/status paths; a later send/status source fix is independently accepted but not installed (installed risk open); see the [integration boundaries](references/integration-boundaries.md#client-lifecycle-reporting).
 
 ## Development and verification
 

@@ -777,10 +777,15 @@ report through that scope before returning/swallowing the original error, and re
 rejection evidence only after a transition belonging to the captured epoch. Preserve
 existing retention and transient/bot-scoped behavior. Causal real-client, stale-re-pair
 and switch tests distinguish this from merely testing the classifier. Direct send and
-status paths remain separate follow-ons; do not describe this as complete lifecycle
-coverage or qualify approvals/crypto/release from it. A storage failure can leave only
+status paths were a separate follow-on, now a focused source fix (`3cfe4d0`) that an
+independent review accepted for source only. It is not installed on a phone, so the
+installed-build risk stays open; a build artifact being signed and scanned is not
+installation. Do not describe this as complete lifecycle coverage or qualify
+approvals/crypto/release from it. A storage failure can leave only
 the switcher diagnostic rejection field empty while the in-memory state/view remains
 correct; that accepted residual does not add authority.
+The send/status fix has a low test gap: the storage-failure wrapper is verified from source
+only, and no test causally injects a wipe or registry-save failure.
 
 
 ### Optional media reads and mint cost (2026-10-01)
