@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.53
+  version: 1.3.54
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -64,7 +64,7 @@ Treat a read-only host setup check as a prerequisite check, not a per-bot send g
 
 When a paired device can perform persistent host actions such as scheduling jobs or changing a bot's default model, require a separate per-device host decision. Pairing and Bot Chat grants do not imply this privilege, even when devices share a user. Default new devices to denied, make the host prompt unambiguous so an earlier yes/no answer cannot grant controls, and provide an explicit host-only way to revoke the decision. Test the denial and grant at the actual route gate; see [integration boundaries](references/integration-boundaries.md).
 
-HMP owner policy (2026-10-01): use a minimum supported Hermes version and attempt implemented features on later and development builds. An unlisted build is not an incompatibility finding. Exact commit/fingerprint receipts describe tested samples; they must not become runtime availability allowlists. Preserve actual authorization, explicit host settings, scoped credentials, required API availability and payload/idempotency checks. After an actual feature failure, offer a compatibility warning and a user-reviewed GitHub issue draft with bounded version/error metadata; never submit automatically or include private logs, content, host addresses or device/profile identifiers. This policy is being implemented; older installed HMP builds still contain exact-build gates. See the [policy and historical evidence](references/integration-boundaries.md#sampled-build-evidence-and-hmp-compatibility-policy).
+HMP owner policy (2026-10-01): use a minimum supported Hermes version and attempt implemented features on later and development builds. An unlisted build is not an incompatibility finding. Exact commit/fingerprint receipts describe tested samples; they must not become runtime availability allowlists. Preserve actual authorization, explicit host settings, scoped credentials, required API availability and payload/idempotency checks. After an actual feature failure, offer a compatibility warning and a user-reviewed GitHub issue draft with bounded version/error metadata; never submit automatically or include private logs, content, host addresses or device/profile identifiers. Reviewed HMP source `4d6863e` implements it, and its files are installed on an owner Linux host with the pinned metadata and runtime hashes matching; native gateway activation was still draining an active run at the last check, so do not claim the new process is live. A version stamp is authoritative before the literal `__version__`, then `release_date`; do not take the larger value. Send and session browsing both need `SessionDB.get_session`. Approvals still use a legacy exact gate pending conversion. See the [policy and historical evidence](references/integration-boundaries.md#sampled-build-evidence-and-hmp-compatibility-policy).
 
 A missing jobs endpoint, a disabled jobs feature flag and absent per-phone controls are different findings; diagnose each separately. An exact-build test receipt covers only the tested build and fingerprint, not scheduler delivery, continuity or phone UI; it is sampled evidence rather than a requirement to validate every newer release. On inspected Hermes `ca705dbf`, a plugin install that needs a declared Python dependency stops for interactive PM consent; inspect that exact dependency request before answering and keep the scanner enabled. Details are in [integration boundaries](references/integration-boundaries.md#exact-build-jobs-qualification-and-install-consent).
 
@@ -118,7 +118,7 @@ needs the existing instance transition reported through a scope captured before 
 Report the original definitive failure before swallowing or rethrowing it; subsequent local
 StaleWriteScope failures cannot reconstruct the missed event. A late response must not wipe or
 label a newer pairing. Keep transient/bot-scoped behavior unchanged and distinguish a reviewed
-read-path repair from send/status paths; a later send/status source fix is independently accepted but not installed (installed risk open); see the [integration boundaries](references/integration-boundaries.md#client-lifecycle-reporting).
+read-path repair from send/status paths; the later send/status fix is independently accepted and installed in iPhone dogfood build `2026100202`, with physical behavior awaiting owner testing; see the [integration boundaries](references/integration-boundaries.md#client-lifecycle-reporting).
 
 ## Development and verification
 

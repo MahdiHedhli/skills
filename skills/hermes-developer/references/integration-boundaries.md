@@ -27,9 +27,35 @@ user-reviewed GitHub issue draft. Include only bounded Hermes/HMP version, commi
 platform and fixed feature/error metadata; exclude chat content, credentials,
 profiles, device identifiers, endpoints and raw logs. Do not submit automatically.
 
+Minimum floors: session reads and browsing need Hermes `0.21.4` (`2026.9.21`);
+send, jobs and model need `0.21.5` (`2026.9.24`). Later or unknown builds attempt
+the required APIs. Read the version stamp first, then the literal `__version__`,
+then `__release_date__`; the first valid value wins, a malformed stamp falls
+through, and the stamp is read BOM-tolerantly. Do not use `max()`. Send and
+session browsing both depend on `SessionDB.get_session`; a probe missing only
+that method must close both while jobs and model stay available. The offline
+`--issue-draft` helper emits fixed, re-validated metadata only, for user review,
+never an automatic issue. Hermes-controlled values must not reach its output
+through caller-supplied objects. Remaining non-blocking follow-ons: constructor
+defaults that fail open (N2); no check that a returned job is paused (N4, no actual
+violation); and hostile in-process `str`/`tuple` subclasses that would need exact-type
+checks (N7), which no current CLI path constructs.
+
+Status: reviewed HMP source
+[`4d6863e`](https://github.com/MahdiHedhli/hermes-hmp/tree/4d6863ef8a311462adb68fc82dd3835657739f81)
+([spec 013](https://github.com/MahdiHedhli/hermes-hmp/tree/4d6863ef8a311462adb68fc82dd3835657739f81/specs/013-minimum-version-compatibility))
+is installed as files on an owner Linux host: pinned metadata and all 31 tracked
+runtime hashes match, Doctor passed, and the live CLI reported `0.21.5` with all
+five features available. A graceful native gateway restart was still draining one
+API run, so activation, the new process and its health were unverified. Do not
+force a repeat restart to speed this up. File installation, Doctor and a CLI
+report are not activation, a phone grant or actual job execution.
+Approvals still use a legacy exact gate pending conversion; runtime ledger and
+phone handoff, and open media, are unfinished.
+
 Earlier HMP runtime gates matched both commit SHA and selected-file fingerprint.
-Those gates are still present in the currently installed build; the replacement
-is being implemented. The historical sections below record their behavior and
+Those gates were in builds before `4d6863e`, and approvals still retain one. The
+historical sections below record their behavior and
 tests, not the current product requirement. Preserve exact source identity in
 sampled test receipts so their scope remains reproducible. Do not require a new
 qualification receipt before using every later release. Run native tests through
@@ -771,16 +797,17 @@ pin mismatch also missed identity-change reporting. Host refusal and key pinning
 held; this was a state/cleanup defect, not unauthorized host access.
 
 The focused [app repair](https://github.com/MahdiHedhli/HermesBotMobile/pull/64),
-`5347d0c`, is independently reviewed source, not a deployed result. Capture the write
+`5347d0c`, is independently reviewed source and installed in iPhone dogfood build
+`2026100202`; physical behavior still needs owner testing. Capture the write
 scope before transport, classify only the existing definitive lifecycle mappings,
 report through that scope before returning/swallowing the original error, and record
 rejection evidence only after a transition belonging to the captured epoch. Preserve
 existing retention and transient/bot-scoped behavior. Causal real-client, stale-re-pair
 and switch tests distinguish this from merely testing the classifier. Direct send and
 status paths were a separate follow-on, now a focused source fix (`3cfe4d0`) that an
-independent review accepted for source only. It is not installed on a phone, so the
-installed-build risk stays open; a build artifact being signed and scanned is not
-installation. Do not describe this as complete lifecycle coverage or qualify
+independent review accepted for source only. It is installed in iPhone dogfood build
+`2026100202`, with its installed bundle version verified. Physical behavior still needs
+owner testing. Do not describe this as complete lifecycle coverage or qualify
 approvals/crypto/release from it. A storage failure can leave only
 the switcher diagnostic rejection field empty while the in-memory state/view remains
 correct; that accepted residual does not add authority.
