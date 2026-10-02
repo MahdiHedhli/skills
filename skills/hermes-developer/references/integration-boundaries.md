@@ -153,6 +153,23 @@ channels whose route or key is unavailable. No key or endpoint belongs in a
 diagnostic record. The check cannot certify a device's bot access or a later
 request outcome.
 
+### Native session observation side effects
+
+On exact Hermes `8afaab37`, `SessionStore.lookup_by_session_key`
+(`gateway/session.py:1261`) calls `_entry_locked`
+(`gateway/session_persistence.py:219`). An unloaded store can create its directory,
+import the legacy index and prune stale entries; pruning can save routing metadata.
+`SessionDB.get_session` and `list_sessions_rich`
+(`hermes_state_sessions.py:786/1260`) call `flush_token_counts`, which can apply queued
+usage writes. First database construction can initialize or migrate schema.
+These are verified source paths, not observed live incidents. Qualify native reads
+using disposable homes; for an operator diagnostic, prefer the existing bounded
+status snapshot rather than invoking these helpers as an assumed read-only check.
+Do not replace native session authority with copied SQL to avoid those side effects.
+The finite media dependency census does not qualify recursive imports, runtime
+callable ownership or a media endpoint. See the
+[upstream observation request](https://gist.github.com/MahdiHedhli/c8d01a96bdfc794edaf7c3e1f4cb1502).
+
 On Hermes `8afaab37`, `gateway.run::_profile_runtime_scope` binds each named
 profile's secret mapping. `gateway.platforms._shared::get_scoped_secret`
 does not fall back to the root process environment when a named profile's
@@ -312,6 +329,18 @@ suggested recursive permission change as the diagnosis of a vanished file.
 Keep three findings apart: (1) a diagnosed missing jobs endpoint (installed plugin
 lacks the routes), (2) the jobs feature flag being off, and (3) per-phone host
 controls not granted. Fixing one does not imply the others.
+
+Linux is supported; a missing exact-build qualification is not an OS exclusion or
+proof of incompatibility. Describe it as not yet validated unless tests establish a
+specific incompatibility. The installed HMP controls commands are
+`hermes hmp devices list` and `hermes hmp devices grant-controls <device_id>`;
+the first output column is the device ID. The grant covers scheduled-job and
+default-model controls together, and the decision is read on each route request,
+so this grant alone needs no restart. Bot authorization, feature flags, build
+qualification and scoped endpoint readiness remain separate. A concealed jobs 404
+does not by itself prove which prerequisite failed. An authenticated status proposal
+must disclose only the requesting device's privilege and authorized bots' readiness,
+preserving concealment and explicit host grants.
 
 Qualification scope for HMP draft PR #71 on Hermes `ca705dbf` (cron fingerprint
 `382a68a0…c889d2`, added after qualification): 11 native cases passed with no

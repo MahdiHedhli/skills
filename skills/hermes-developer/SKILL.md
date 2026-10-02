@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.50
+  version: 1.3.51
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -74,7 +74,9 @@ For multi-profile plugins, derive operator health from the running gateway's
 served set, effective feature flags, exact-build gates, and each profile's
 scoped endpoint. Keep snapshots fresh, bounded, and status-only; fail closed
 on stale or incomplete data. Route health does not prove device authorization
-or a later turn's outcome.
+or a later turn's outcome. Native session lookup can initialize or prune metadata, and
+database session reads can flush queued usage writes; do not assume those helpers are
+side-effect-free health probes. See the [native observation boundary](references/integration-boundaries.md#native-session-observation-side-effects).
 
 When replacing a live platform plugin, check the gateway's active-work status
 before a drain-aware restart. An install into an isolated `HERMES_HOME` should
