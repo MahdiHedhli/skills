@@ -46,10 +46,11 @@ Status: reviewed HMP source
 ([spec 013](https://github.com/MahdiHedhli/hermes-hmp/tree/4d6863ef8a311462adb68fc82dd3835657739f81/specs/013-minimum-version-compatibility))
 is installed as files on an owner Linux host: pinned metadata and all 31 tracked
 runtime hashes match, Doctor passed, and the live CLI reported `0.21.5` with all
-five features available. A graceful native gateway restart was still draining one
-API run, so activation, the new process and its health were unverified. Do not
-force a repeat restart to speed this up. File installation, Doctor and a CLI
-report are not activation, a phone grant or actual job execution.
+five features available. The native graceful restart completed without force. A fresh running gateway,
+matching listener process, expected TLS identity and per-bot health were verified.
+Three bots have send and jobs prerequisites ready; one still lacks them, and models
+remain disabled. Activation is verified, while phone grants and actual job execution
+remain separate checks.
 Approvals still use a legacy exact gate pending conversion; runtime ledger and
 phone handoff, and open media, are unfinished.
 
