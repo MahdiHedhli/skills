@@ -51,11 +51,13 @@ matching listener process, expected TLS identity and per-bot health were verifie
 Three bots have send and jobs prerequisites ready; one still lacks them, and models
 remain disabled. Activation is verified, while phone grants and actual job execution
 remain separate checks.
-Approvals still use a legacy exact gate pending conversion; runtime ledger and
-phone handoff, and open media, are unfinished.
+The integrated approval minimum-policy candidate passed independent source review on
+2026-10-02; native fixtures, packaging and deployment remain pending. Runtime ledger,
+operational phone handoff and open media are unfinished.
 
 Earlier HMP runtime gates matched both commit SHA and selected-file fingerprint.
-Those gates were in builds before `4d6863e`, and approvals still retain one. The
+Those gates were in builds before `4d6863e`; the separate historical approval draft
+also retained one before the reviewed conversion. The
 historical sections below record their behavior and
 tests, not the current product requirement. Preserve exact source identity in
 sampled test receipts so their scope remains reproducible. Do not require a new
@@ -68,6 +70,30 @@ target build's package workflow and keep generated environments outside the
 live Hermes home. Build the plugin wheel and inspect its contents when a
 runtime gate reads package data; source-tree tests can miss an omitted JSON
 allowlist or manifest.
+
+## Approval minimum-policy source findings
+
+Verified 2026-10-02 against Hermes `f97608f1`, `8afaab37` and `ac0cfa7d`: the
+`retire_clarify_card` mention in `gateway/platforms/base.py` documents an optional
+adapter hook; it does not define a required base method. `run_inbound.py` and
+`run_turn_runner.py` resolve it through `getattr(type(adapter), ...)`. HMP defines
+its own hook. A base-class attribute probe incorrectly closes Phone chat, while
+probing HMP's own hook proves nothing about Hermes. Check the real call site.
+
+The spec 034 integrated candidate separates Bot Chat approval availability from
+Phone-chat helper availability and requires actual minimum version/API/authorization
+gates. Root verified the source review and a bounded documentation/test addendum;
+real native fixtures and live admission remain pending. The legacy owner policy
+still couples explicit `deny-controls` to lost approval ownership. Documentation
+must not suggest that denying controls prepares a usable approval owner; changing
+that authority model is a separate contract decision.
+
+The pure Dart notification handoff foundation is independently accepted at
+[app `6cfd688`](https://github.com/MahdiHedhli/HermesBotMobile/commit/6cfd6880e56dac3665f3df7e10f49a17141e8d44).
+Root passed 1,328 client/machine tests with one real-server fixture skip and killed
+seven required identity/generation/epoch/ticket/commit/progress mutants. It remains
+unwired and is absent from iPhone build `2026100203`. Do not equate this with a
+provider delivery, live HMP resolver or physical-device result.
 
 ## Gateway setup and profile routing
 
