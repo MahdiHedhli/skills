@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.51
+  version: 1.3.52
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -64,14 +64,16 @@ Treat a read-only host setup check as a prerequisite check, not a per-bot send g
 
 When a paired device can perform persistent host actions such as scheduling jobs or changing a bot's default model, require a separate per-device host decision. Pairing and Bot Chat grants do not imply this privilege, even when devices share a user. Default new devices to denied, make the host prompt unambiguous so an earlier yes/no answer cannot grant controls, and provide an explicit host-only way to revoke the decision. Test the denial and grant at the actual route gate; see [integration boundaries](references/integration-boundaries.md).
 
-A missing jobs endpoint, a disabled jobs feature flag and absent per-phone controls are different findings; diagnose each separately. An exact-build qualification covers only the tested build and fingerprint, not scheduler delivery, continuity or phone UI. On inspected Hermes `ca705dbf`, a plugin install that needs a declared Python dependency stops for interactive PM consent; inspect that exact dependency request before answering and keep the scanner enabled. Details are in [integration boundaries](references/integration-boundaries.md#exact-build-jobs-qualification-and-install-consent).
+HMP owner policy (2026-10-01): use a minimum supported Hermes version and attempt implemented features on later and development builds. An unlisted build is not an incompatibility finding. Exact commit/fingerprint receipts describe tested samples; they must not become runtime availability allowlists. Preserve actual authorization, explicit host settings, scoped credentials, required API availability and payload/idempotency checks. After an actual feature failure, offer a compatibility warning and a user-reviewed GitHub issue draft with bounded version/error metadata; never submit automatically or include private logs, content, host addresses or device/profile identifiers. This policy is being implemented; older installed HMP builds still contain exact-build gates. See the [policy and historical evidence](references/integration-boundaries.md#sampled-build-evidence-and-hmp-compatibility-policy).
+
+A missing jobs endpoint, a disabled jobs feature flag and absent per-phone controls are different findings; diagnose each separately. An exact-build test receipt covers only the tested build and fingerprint, not scheduler delivery, continuity or phone UI; it is sampled evidence rather than a requirement to validate every newer release. On inspected Hermes `ca705dbf`, a plugin install that needs a declared Python dependency stops for interactive PM consent; inspect that exact dependency request before answering and keep the scanner enabled. Details are in [integration boundaries](references/integration-boundaries.md#exact-build-jobs-qualification-and-install-consent).
 
 For pairing failures, distinguish an unreachable host from a received error on an instance-pinned connection. A connection failure does not prove that Tailscale is down; a 5xx does not prove the offer is bad or that a P4 activation did not occur. Suggest a fresh offer only for an identified code or offer problem, and do not automatically retry an uncertain P4 result. See [integration boundaries](references/integration-boundaries.md).
 
 For a phone's QR-derived host precheck, verify the QR identity on the TLS connection before a diagnostic `GET /hmp/v1/ready`. Send no key, offer secret, or authorization material before fingerprint confirmation. A 200 proves only that this pinned route answered then; it cannot authorize pairing or attest a bot channel. The first pairing-pool pin check now happens before key generation, so adjust acceptance fixtures accordingly; see [integration boundaries](references/integration-boundaries.md).
 
 For multi-profile plugins, derive operator health from the running gateway's
-served set, effective feature flags, exact-build gates, and each profile's
+served set, effective feature flags, required capabilities, and each profile's
 scoped endpoint. Keep snapshots fresh, bounded, and status-only; fail closed
 on stale or incomplete data. Route health does not prove device authorization
 or a later turn's outcome. Native session lookup can initialize or prune metadata, and

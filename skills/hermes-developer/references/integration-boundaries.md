@@ -12,14 +12,28 @@ The profile-scoped API server has `GET /api/sessions?title=Bot Chat&include_hidd
 
 The API server already provides session list/read, metadata PATCH, DELETE, and `/fork` on a profile. `/fork` ends the source session; it is not a non-destructive branch. Keep canonical Bot Chat deletion/archive outside a generic remote session-management UI, and treat project move/export/open-in-terminal as separate capabilities to verify rather than inferring them from the existing session routes.
 
-## Exact-build plugin qualification
+## Sampled-build evidence and HMP compatibility policy
 
-HMP's compatibility gates cover selected Hermes source files. For a git
-installation, require both the reviewed file fingerprint and exact commit
-SHA. A read-only source archive can prove its bytes match a clean checkout,
-but it has no git identity; do not add a fingerprint-only archive entry just
-because the git checkout passed. Run Hermes tests through
-`scripts/run_tests.sh` and plugin integration against temporary homes.
+On 2026-10-01 the HMP owner explicitly replaced exact-build runtime allowlists
+with a minimum supported Hermes version policy. Attempt implemented features
+on later releases and development builds. Unknown or unlisted versions do not
+prove incompatibility. Determine the minimum from source and release evidence,
+not from the first version mentioned by a user. Keep actual authentication,
+per-device controls, scoped credentials, profile routing, required API availability,
+request bounds and idempotency checks.
+
+Warn about version compatibility after a real feature failure and offer a
+user-reviewed GitHub issue draft. Include only bounded Hermes/HMP version, commit,
+platform and fixed feature/error metadata; exclude chat content, credentials,
+profiles, device identifiers, endpoints and raw logs. Do not submit automatically.
+
+Earlier HMP runtime gates matched both commit SHA and selected-file fingerprint.
+Those gates are still present in the currently installed build; the replacement
+is being implemented. The historical sections below record their behavior and
+tests, not the current product requirement. Preserve exact source identity in
+sampled test receipts so their scope remains reproducible. Do not require a new
+qualification receipt before using every later release. Run native tests through
+`scripts/run_tests.sh` with disposable homes.
 
 The HMP fixture extractor pinned Python 3.11, while Hermes `8afaab37` needed
 Python 3.14 for its locked dependencies. Select the interpreter from the
