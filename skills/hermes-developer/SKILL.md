@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.2.0
+  version: 1.3.63
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -27,6 +27,7 @@ From current [Hermes AGENTS.md](https://github.com/NousResearch/hermes-agent/blo
 - Preserve strict message alternation and do not inject a synthetic user message into an active tool loop.
 - Resolve profile-aware paths through `hermes_constants`, not a hardcoded `~/.hermes` path. Keep secrets in `.env` and behavior settings in `config.yaml`.
 - Verify the observed bug and original design before changing a boundary. Third-party product integrations belong in standalone plugin repositories.
+- The temporary Sep 2026 old-import compatibility layer has been removed. Internal import paths are not plugin APIs; use `ctx` and documented ABCs where possible, and resolve any remaining private import against the target build.
 
 ## Code map
 
@@ -47,15 +48,109 @@ Hermes uses facade modules with focused sibling modules. Trace the current facad
 
 - **Existing workflow:** a Hermes CLI command and skill, when possible.
 - **Local or third-party capability:** native plugin under a user/project plugin directory, or a separately distributed package. The standard plugin has `plugin.yaml`, `__init__.py` with `register(ctx)`, and only the declared registrations it needs. `hermes plugins validate` and `hermes plugins list` help inspect discovery. Check the current [plugin manifest and dependency rules](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins) before packaging; dependencies are managed by Hermes PM.
+- **GitHub plugin distribution:** decide the install root before arranging the repository. On inspected Hermes `main` `39faafb6`, bare `owner/repo` clones and scans the whole repository; `owner/repo#subdir` selects a sparse subdirectory. Tests, docs, and CI beside a root plugin therefore affect the install scan. Keep findings visible and review them; see [extension map](references/extension-map.md).
+- **Pinned plugin updates:** on Hermes `8afaab37`, `hermes plugins check-updates` does not compare a pinned plugin with newer releases, and `hermes plugins update <name>` refuses to advance its SHA. `hermes update` updates core and reports plugin compatibility concerns but does not update the plugin. A release checker should compare published tag commits by ancestry and treat compatibility-list matches as advisory. Keep explicit SHA updates and rollback, and verify compatibility after a core update; see [integration boundaries](references/integration-boundaries.md).
 - **Messaging channel:** a platform plugin is the preferred route. Implement `BasePlatformAdapter`, register with `ctx.register_platform`, and follow [Adding Platform Adapters](https://hermes-agent.nousresearch.com/docs/developer-guide/adding-platform-adapters) plus `gateway/platforms/AGENTS.md`. Bundled platforms are mostly in `plugins/platforms/`; `gateway/platforms/` also has shared and legacy adapters. `kind: platform` loading is deferred, so place outbound model tools in a separate declared `tools.py` if they must be available without starting the adapter.
-- **Model, memory, context, media, search, browser, secret, or terminal environment backend:** read the matching typed-plugin guide before selecting an interface. The [plugin guide](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins) routes among them.
+- **Model, memory, context, media, search, browser, secret, or terminal environment backend:** read the matching typed-plugin guide before selecting an interface. The [plugin guide](https://hermes-agent.nousresearch.com/docs/developer-guide/plugins) routes among them. A language pack can declare `provides_locales` and ship `locales/<id>[.tui|.desktop].yaml` without Python registration.
 - **Core model tool:** use only when the existing surfaces cannot provide the capability. Registration lives in `tools/*.py`; exposure is selected through `toolsets.py`. `check_fn` is for process-wide reachability or opt-in, not session/client identity. Verify the handler's current return and error contract in [Tools Runtime](https://hermes-agent.nousresearch.com/docs/developer-guide/tools-runtime).
 
 See [references/extension-map.md](references/extension-map.md) for the decision table. A plugin should not patch Hermes core files or assume a private internal is a stable plugin API. If an integration needs a missing primitive, identify the generic interface gap and check upstream plans before inventing a private workaround.
 
+For mobile or other remote clients, distinguish a profile from a Bot Mode bot, keep model/config writes inside the routed profile's home and secret scope, and check whether an operation exists on the gateway adapter surface or only in Desktop's TUI RPC. See [integration boundaries](references/integration-boundaries.md) for verified examples and security traps.
+
+For profile-scoped send routes, validate the target profile's own API server key and effective gate, not only the plugin-wide send flag. Preserve the client's draft until its encrypted pending-send record is durable, retain text after a definitive host refusal, and keep a pending outcome visible if the gate later closes. The exact-build behavior and source paths are in [integration boundaries](references/integration-boundaries.md).
+
+Treat a read-only host setup check as a prerequisite check, not a per-bot send guarantee. Verify each served profile's route, secret scope, and authorization separately before enabling writes. A newly created profile can be served yet lack its exact root `hmp` route (`not_routed`). On `ca705dbf`, its own multiplex flag is not required and changing it affects chat storage; root routes do not hot-refresh on profile rescan. Route-only preparation does not make earlier standalone-profile history canonically readable (root-reviewed fixture, one archive build; see the C6 split in the reference). Remote owner access cards, automatic scoped credentials and safe native settlement need separate contracts; see [integration boundaries](references/integration-boundaries.md).
+
+When a paired device can perform persistent host actions such as scheduling jobs or changing a bot's default model, require a separate per-device host decision. Pairing and Bot Chat grants do not imply this privilege, even when devices share a user. Default new devices to denied, make the host prompt unambiguous so an earlier yes/no answer cannot grant controls, and provide an explicit host-only way to revoke the decision. Test the denial and grant at the actual route gate; see [integration boundaries](references/integration-boundaries.md).
+
+HMP owner policy (2026-10-01): use a minimum supported Hermes version and attempt implemented features on later and development builds. An unlisted build is not an incompatibility finding. Exact commit/fingerprint receipts describe tested samples; they must not become runtime availability allowlists. Preserve actual authorization, explicit host settings, scoped credentials, required API availability and payload/idempotency checks. After an actual feature failure, offer a compatibility warning and a user-reviewed GitHub issue draft with bounded version/error metadata; never submit automatically or include private logs, content, host addresses or device/profile identifiers. Reviewed HMP source `4d6863e` implements it, and its files are installed on an owner Linux host with the pinned metadata and runtime hashes matching; the native graceful restart completed, and the fresh running gateway, matching listener process, expected TLS identity and per-bot health were verified. This does not verify phone controls or actual job execution. A version stamp is authoritative before the literal `__version__`, then `release_date`; do not take the larger value. Send and session browsing both need `SessionDB.get_session`. The installed `4d6863e` baseline contains no approval lane. The separate integrated approval candidate passed independent source review after minimum-policy conversion; the corrected isolated native matrix passed 13 selected cases on each of two prepared samples, including negative notifier-availability cases on the release floor. Packaging, deployment and physical card/answer behavior remain pending. See the [policy and historical evidence](references/integration-boundaries.md#sampled-build-evidence-and-hmp-compatibility-policy).
+
+A missing jobs endpoint, a disabled jobs feature flag and absent per-phone controls are different findings; diagnose each separately. An exact-build test receipt covers only the tested build and fingerprint, not scheduler delivery, continuity or phone UI; it is sampled evidence rather than a requirement to validate every newer release. On inspected Hermes `ca705dbf`, a plugin install that needs a declared Python dependency stops for interactive PM consent; inspect that exact dependency request before answering and keep the scanner enabled. Details are in [integration boundaries](references/integration-boundaries.md#exact-build-jobs-qualification-and-install-consent).
+
+For pairing failures, distinguish an unreachable host from a received error on an instance-pinned connection. A connection failure does not prove that Tailscale is down; a 5xx does not prove the offer is bad or that a P4 activation did not occur. Suggest a fresh offer only for an identified code or offer problem, and do not automatically retry an uncertain P4 result. See [integration boundaries](references/integration-boundaries.md).
+
+For a phone's QR-derived host precheck, verify the QR identity on the TLS connection before a diagnostic `GET /hmp/v1/ready`. Send no key, offer secret, or authorization material before fingerprint confirmation. A 200 proves only that this pinned route answered then; it cannot authorize pairing or attest a bot channel. The first pairing-pool pin check now happens before key generation, so adjust acceptance fixtures accordingly; see [integration boundaries](references/integration-boundaries.md).
+
+For multi-profile plugins, derive operator health from the running gateway's
+served set, effective feature flags, required capabilities, and each profile's
+scoped endpoint. Keep snapshots fresh, bounded, and status-only; fail closed
+on stale or incomplete data. Route health does not prove device authorization
+or a later turn's outcome. Native session lookup can initialize or prune metadata, and
+database session reads can flush queued usage writes; do not assume those helpers are
+side-effect-free health probes. See the [native observation boundary](references/integration-boundaries.md#native-session-observation-side-effects).
+
+When replacing a live platform plugin, check the gateway's active-work status
+before a drain-aware restart. An install into an isolated `HERMES_HOME` should
+use an isolated Hermes build: an installed source checkout's CLI bootstrap may
+first finish its own dependency or product update, even when the target home is
+temporary. Target the installed plugin explicitly with `hermes plugins doctor <name-or-dir>`;
+on inspected `8afaab37`, omitting the argument inspects `.` and can report no manifest
+while exiting successfully. Inspect the result as well as the exit code. Doctor can warn about missing declared dependencies while
+the plugin is disabled; enable it, then check again. A plugin reload may leave
+an old adapter's runtime health snapshot in place until the gateway restarts.
+Confirm the exact installed commit, Plugin Doctor, compatibility, and fresh
+per-profile health after restart; verify one real client send separately.
+
+For gateway platform messages, distinguish task scheduling from durable admission. On the inspected experimental Hermes build, `_gateway_accepted` can be true before the later `AdmissionTicket` outcome. On stock `8afaab37`, a false scheduling flag can mean busy-queued, so only strict True proves admission and False/missing/nonboolean stay unknown. Wait for `admission_ticket.reported` where that API exists; treat `refused_other` as ambiguous when its reason is unavailable, since it can include `persist_failed`. Keep missing, unfamiliar, or timed-out outcomes under the same idempotency key without automatic retry, and add a local transcript observation only after confirmed admission. The older inspected stock-base `04fa849e` and experimental `7e8c8f07` session-chat streams lacked the approval notifier used by `/v1/runs`; untagged main `ac0cfa7` registered it and passed an isolated HMP real-gateway fixture, though no released build is qualified. Check the exact route and build before promising answerable Bot Chat prompts; see [integration boundaries](references/integration-boundaries.md#search-and-approval-privacy).
+
+For approval dependency probes, verify optional hooks against their actual call site. On inspected
+`f97608f1`, `8afaab37` and `ac0cfa7d`, `retire_clarify_card` is not a required method on
+`BasePlatformAdapter`; probing it there would incorrectly close Phone chat. See
+[integration boundaries](references/integration-boundaries.md#approval-minimum-policy-source-findings).
+
+Historical source-qualified approval bridge behavior: separate read/send compatibility from approval admission.
+An informational on-disk check does not prove the current process was admitted: the HMP draft
+binds a first-supported-factory baseline and requires a full process restart after source or
+plugin changes. Historical fixture passes predate this gate; see
+[integration boundaries](references/integration-boundaries.md#approval-process-qualification).
+
+When combining an approval bridge with persistent host controls, keep the approval owner gate
+separate: an explicit controls grant alone does not imply approval ownership, while a host denial
+can close an otherwise allowlisted owner. Fixtures that intentionally exercise owner approval
+must explicitly enroll their primary device; generic pairing should retain its denied default.
+The integrated draft passed a fresh full exact-build fixture matrix, but still needs separate
+owner-local packaging and device acceptance; see the reference.
+
+When a fixture build fails before the gateway starts, treat it as a setup error, not a 45 s readiness failure. Retain child diagnostics only privately and keep raw logs and the environment out of reports; a passing partial rerun does not identify the original cause or qualify the full matrix. The later unchanged combined fixture passed on exact `8afaab37` (HMP [PR #61](https://github.com/MahdiHedhli/hermes-hmp/pull/61)) as unsigned fixture-only evidence, with configured nonfatal 90-second stack diagnostics that did not trigger in this run, the 120 s deadline unchanged, and the original seed cause still unknown. See [setup diagnostics](references/integration-boundaries.md#offline-fixture-setup-diagnostics).
+
+For fixture preparation after a minimum-version gate conversion, use the production version/API
+verdict. `CompatGate.evaluate()` can legitimately report supported with no build identity;
+requiring a fingerprint or generating a manifest entry can abort before any test body. The bounded
+HMP fixture-tool repair is independently accepted; its corrected native matrix remains pending.
+Preserve original failed setup evidence and private child diagnostics; see
+[offline fixture setup diagnostics](references/integration-boundaries.md#offline-fixture-setup-diagnostics).
+
+For a mobile session picker or any check-then-read of a current session's messages, `SessionDB.get_session` and `get_messages` on `8afaab37` use separate read contexts, so an eligibility check followed by a read can race a fork or lineage change. Prefer an upstream transactional primitive over copied SQLite logic; see [session snapshot gap](references/integration-boundaries.md#session-snapshot-consistency).
+
+For chat media or attachments in a mobile extension, separate our renderer gap from upstream limits. A linked HTTPS Markdown image once reached mobile as literal text; that renderer gap is historical, and a public-CDN image now renders after an owner physical check. Local `MEDIA:` output remains text-only. On Hermes `ca705dbf`, existing adapter cache helpers could support bounded native delivery after qualification, but bounds must be enforced before the helper (see the reference). The Desktop live-owner handoff accepts only strings; the session API normalizer accepts images but rejects file parts. Do not submit multimodal content through a skipped Desktop handoff or fall back silently to Phone chat. Do not enable browser control for attachments. A native `MEDIA:` path check is not per-profile authority and an assistant string cannot authorize a host file read; the local-output research (G1/G2 persistence/history, G3 file/raster research and exact-build lexical producer evidence accepted, serving route unqualified) and root's trust decision are in the reference. See [chat media and attachments](references/integration-boundaries.md#chat-media-and-attachments).
+
+For remote-client lifecycle reporting, a bearer revocation that retires a token manager still
+needs the existing instance transition reported through a scope captured before transport.
+Report the original definitive failure before swallowing or rethrowing it; subsequent local
+StaleWriteScope failures cannot reconstruct the missed event. A late response must not wipe or
+label a newer pairing. Keep transient/bot-scoped behavior unchanged and distinguish a reviewed
+read-path repair from send/status paths; the later send/status fix is independently accepted and installed in iPhone dogfood build `2026100202`, with physical behavior awaiting owner testing; see the [integration boundaries](references/integration-boundaries.md#client-lifecycle-reporting).
+
+For a visible instance-switcher heartbeat, an unauthenticated ready response must not
+retire credentials shared with foreground chat. Quarantine late probes by watch generation,
+flight and connection as well as pairing epoch. Dismiss recovery must preserve its original
+send evidence across refresh; a delivery signal cannot clear a newer same-text draft or
+survive as a new notice on screen reopen. The bounded repairs are independently reviewed and carried into owner dogfood build
+`2026100204`. Explicit refresh must also reconcile a released original message ID once, read-only,
+under the pending-action lock; reloading transcript rows alone does not meet that contract.
+Unknown status or matching text without an ID retains evidence. Report definitive revocation
+through the scope captured before lookup. The refresh repair is reviewed and installed; the owner confirms draft restoration while an
+ordinary history bubble remains. The bug is open. On inspected native Bot Chat paths, the caller
+message ID is not preserved in history, so matching text cannot establish acceptance or justify
+hiding a row. See the version-scoped identity gap in the reference.
+See [client lifecycle reporting](references/integration-boundaries.md#client-lifecycle-reporting).
+
 ## Development and verification
 
 Current Hermes development uses its package manager (PM), not the older `uv pip install -e` recipe. For a checkout you are authorized to prepare, choose isolated `HERMES_HOME` and `HERMES_RUNTIME_DIR`, then follow [PM developer workflow](https://hermes-agent.nousresearch.com/docs/reference/package-management#developer-workflow) and `source ./activate` (PowerShell: `. .\activate.ps1`). Current development uses PM's pinned Python 3.14; package metadata supporting older Python does not mean the current development environment uses it.
+
+For an exact-build plugin compatibility check, choose the interpreter from that Hermes revision's lock and test workflow. Do not assume a fixture extractor's hardcoded Python version is suitable. Bind a git install to both its reviewed source fingerprint and commit SHA; verify packaged wheels contain the compatibility data they read. See [integration boundaries](references/integration-boundaries.md).
 
 For tests, build an independent interpreter from the committed lock if needed:
 
@@ -68,7 +163,7 @@ The destination must be fresh. `scripts/run_tests.sh` is the required runner for
 
 ## Refresh this skill
 
-The installed snapshot was checked against NousResearch/hermes-agent `e408d363393ccb72267e67bcccf4f8954b438cd9` on 2026-09-28. Refresh before a substantial Hermes task when the target or upstream has moved:
+The installed snapshot was checked against NousResearch/hermes-agent `81f481b2db39e9c3e3df8cbb063931746263eca2` on 2026-09-28. Refresh before a substantial Hermes task when the target or upstream has moved:
 
 1. Compare the target checkout with current [NousResearch/hermes-agent](https://github.com/NousResearch/hermes-agent), its root and area `AGENTS.md`, and the relevant developer pages. Use an isolated checkout for a latest-upstream comparison; do not pull a user's installed Hermes without authorization.
 2. Set `HERMES_AGENT_REPO` to that checkout and run `python3 <this skill>/scripts/refresh_from_docs.py`. It discovers every developer-guide Markdown page recursively and writes `references/LAST_REFRESH.md` plus the heading snapshot. It does not rewrite this entrypoint.
