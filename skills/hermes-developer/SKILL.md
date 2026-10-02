@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.55
+  version: 1.3.56
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -119,6 +119,13 @@ Report the original definitive failure before swallowing or rethrowing it; subse
 StaleWriteScope failures cannot reconstruct the missed event. A late response must not wipe or
 label a newer pairing. Keep transient/bot-scoped behavior unchanged and distinguish a reviewed
 read-path repair from send/status paths; the later send/status fix is independently accepted and installed in iPhone dogfood build `2026100202`, with physical behavior awaiting owner testing; see the [integration boundaries](references/integration-boundaries.md#client-lifecycle-reporting).
+
+For a visible instance-switcher heartbeat, an unauthenticated ready response must not
+retire credentials shared with foreground chat. Quarantine late probes by watch generation,
+flight and connection as well as pairing epoch. Dismiss recovery must preserve its original
+send evidence across refresh; a delivery signal cannot clear a newer same-text draft or
+survive as a new notice on screen reopen. These candidate findings are pending repair and
+review, not installed regressions; see [client lifecycle reporting](references/integration-boundaries.md#client-lifecycle-reporting).
 
 ## Development and verification
 

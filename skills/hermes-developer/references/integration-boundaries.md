@@ -816,6 +816,26 @@ The send/status fix has a low test gap: the storage-failure wrapper is verified 
 only, and no test causally injects a wipe or registry-save failure.
 
 
+### Visible availability and released-draft candidate findings (2026-10-01)
+
+Independent focused review of app spec 033 reproduced five candidate defects. An
+unauthenticated `/ready` 401 `revoked` can retire a shared TokenManager while leaving
+its pairing labelled usable; that response is not device-revocation evidence. The
+bounded repair suppresses retirement only for `ready()`, retaining authenticated
+revocation handling. A late pin error must also satisfy the current watch generation,
+flight token and connection before the captured lifecycle report. An unusable pairing
+must not display an old saved success time.
+
+A delivery signal carried across view copies can outlive its send. Reopen can then
+falsely clear a newer released draft with identical text. Clear the signal on record
+reservation/replacement/restore/release and screen close, verify its current identity
+before applying it, and ignore a signal present when a fresh screen first builds.
+Bound handled-event memory to one ID. Preserve edits and original durable send evidence;
+server transcript text equality does not establish that particular send's acceptance.
+`PendingSend.toString` must omit the client ID even when the format predates this work.
+These are reproduced isolated candidate findings, with bounded repairs assigned; no
+live exposure, repaired-source acceptance, new phone build or device result is claimed.
+
 ### Optional media reads and mint cost (2026-10-01)
 
 HMP draft [#70](https://github.com/MahdiHedhli/hermes-hmp/pull/70), `c0f2343`, now has
