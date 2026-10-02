@@ -550,6 +550,19 @@ capability; that availability limitation remains recorded outside this fix.
 
 ### Offline fixture setup diagnostics
 
+**Minimum-policy setup finding (2026-10-02).** On accepted HMP `150bd0f`,
+`CompatGate.evaluate()` returns supported with `identity=None` when the actual read version/API
+checks pass. The legacy fixture `bootstrap_compat_entry` therefore always aborts on its mandatory
+fingerprint check, before any gateway or approval case body. The first locked 13-case native
+attempt had 13 setup errors, zero case-body passes; it is preserved as failed evidence.
+The [tool-only repair `2c153e2`](https://github.com/MahdiHedhli/hermes-hmp/commit/2c153e2)
+asks the real gate in the sample's own interpreter, requires a strict boolean success, fails closed
+on below-floor/missing-API/malformed replies, and writes no fingerprint admission list. Independent
+source review accepted it; root passed 166 fixture-tool cases and 17 final focused cases plus
+configured lint and privacy scans. The corrected native matrix remains pending. This is our test
+setup defect, not an upstream capability failure or runtime permission change. Shared helper
+failures can contain captured child output; keep those diagnostics private.
+
 Evidence: HMP draft [PR #60](https://github.com/MahdiHedhli/hermes-hmp/pull/60) at `d8b8b08`
 and its Amendment 4 (`specs/005-approval-process-matrix/amendment-4-setup-diagnostics.md`).
 This is fixture-tooling evidence, not runtime, release or device qualification.
