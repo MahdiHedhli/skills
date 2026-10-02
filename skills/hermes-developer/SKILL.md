@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.57
+  version: 1.3.58
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -124,8 +124,9 @@ For a visible instance-switcher heartbeat, an unauthenticated ready response mus
 retire credentials shared with foreground chat. Quarantine late probes by watch generation,
 flight and connection as well as pairing epoch. Dismiss recovery must preserve its original
 send evidence across refresh; a delivery signal cannot clear a newer same-text draft or
-survive as a new notice on screen reopen. These candidate findings are pending repair and
-review, not installed regressions; see [client lifecycle reporting](references/integration-boundaries.md#client-lifecycle-reporting).
+survive as a new notice on screen reopen. The bounded repairs are independently reviewed
+and installed in owner dogfood build `2026100203`; physical behavior awaits owner testing.
+See [client lifecycle reporting](references/integration-boundaries.md#client-lifecycle-reporting).
 
 ## Development and verification
 

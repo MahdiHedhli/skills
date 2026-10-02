@@ -816,7 +816,7 @@ The send/status fix has a low test gap: the storage-failure wrapper is verified 
 only, and no test causally injects a wipe or registry-save failure.
 
 
-### Visible availability and released-draft candidate findings (2026-10-01)
+### Visible availability and released-draft repairs (2026-10-01)
 
 Independent focused review of app spec 033 reproduced five candidate defects. An
 unauthenticated `/ready` 401 `revoked` can retire a shared TokenManager while leaving
@@ -833,8 +833,17 @@ before applying it, and ignore a signal present when a fresh screen first builds
 Bound handled-event memory to one ID. Preserve edits and original durable send evidence;
 server transcript text equality does not establish that particular send's acceptance.
 `PendingSend.toString` must omit the client ID even when the format predates this work.
-These are reproduced isolated candidate findings, with bounded repairs assigned; no
-live exposure, repaired-source acceptance, new phone build or device result is claimed.
+The bounded repairs are independently reviewed and root-accepted in
+[app draft #66](https://github.com/MahdiHedhli/HermesBotMobile/pull/66), `097f4a1`,
+and installed in owner dogfood build `2026100203`, with its bundle version verified.
+Five permanent real-controller/Navigator regressions cover close, reopen, edits and
+queued-record replacement; root reran those and sixteen released-draft tests (21 passed).
+A queued released record can retain its own delivery signal after the polling window,
+so replacement must clear it even though the current footer offers no Send over that
+record. Early close before open finishes has a bounded notice-lifetime residual contained
+by the fresh-screen baseline and identity fences; physical OS/device behavior still
+awaits owner testing. No live exposure, public release, operational approvals or push
+delivery is claimed.
 
 ### Optional media reads and mint cost (2026-10-01)
 
