@@ -83,7 +83,11 @@ probing HMP's own hook proves nothing about Hermes. Check the real call site.
 The spec 034 integrated candidate separates Bot Chat approval availability from
 Phone-chat helper availability and requires actual minimum version/API/authorization
 gates. Root verified the source review and a bounded documentation/test addendum;
-real native fixtures and live admission remain pending. The legacy owner policy
+the corrected isolated native matrix passed 13 selected cases on each of `8afaab37`
+and release-floor `f97608f1`, on their declared locked Python environments, with zero skips
+and unchanged protected inputs. The floor sample lacks the Bot Chat notifier, so its
+dependent cases are negative availability checks. Packaging, live admission, an additional
+candidate `ca705dbf` run and physical card/answer checks remain pending. The legacy owner policy
 still couples explicit `deny-controls` to lost approval ownership. Documentation
 must not suggest that denying controls prepares a usable approval owner; changing
 that authority model is a separate contract decision.
