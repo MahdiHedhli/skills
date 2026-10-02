@@ -3,7 +3,7 @@ name: hermes-developer
 description: "Develop Hermes Agent core, plugins, platform adapters, providers, tools, and skills using current Nous Research docs and code."
 license: MIT
 metadata:
-  version: 1.3.61
+  version: 1.3.62
   author: Mahdi Hedhli
   platforms: [linux, macos, windows]
   hermes:
@@ -140,8 +140,10 @@ survive as a new notice on screen reopen. The bounded repairs are independently 
 `2026100204`. Explicit refresh must also reconcile a released original message ID once, read-only,
 under the pending-action lock; reloading transcript rows alone does not meet that contract.
 Unknown status or matching text without an ID retains evidence. Report definitive revocation
-through the scope captured before lookup. The refresh repair is reviewed and installed; physical
-behavior awaits owner testing.
+through the scope captured before lookup. The refresh repair is reviewed and installed; the owner confirms draft restoration while an
+ordinary history bubble remains. The bug is open. On inspected native Bot Chat paths, the caller
+message ID is not preserved in history, so matching text cannot establish acceptance or justify
+hiding a row. See the version-scoped identity gap in the reference.
 See [client lifecycle reporting](references/integration-boundaries.md#client-lifecycle-reporting).
 
 ## Development and verification

@@ -905,6 +905,26 @@ can conservatively leave evidence for another check. These residuals never autho
 The owner's physical outcome remains unconfirmed. This finding does not refresh the Sept 28
 upstream snapshot or make approvals, priority push, host media or uploads operational.
 
+### Native Bot Chat caller identity gap (2026-10-02)
+
+The owner confirms draft restoration after Dismiss, but the ordinary user bubble remains.
+App `0ae5667` renders canonical snapshot/live-tail rows rather than optimistic local bubbles.
+On inspected HMP `4d6863e` and `150bd0f`, DS-7 posts message text without the phone's client ID;
+Hermes `ca705dbf` session-chat handlers do not forward a caller ID to user-row persistence
+or Desktop live-mailbox delivery. HMP's `_cmid` history parser expects a stamped
+`platform_message_id`, which that inspected path does not produce. The candidate's separate
+Phone-chat producer does stamp it; do not generalize the gap to every HMP-originated row.
+
+DS-8 status remains independent and accepted/queued can settle without a row ID. Unknown,
+submitted, ambiguous not-accepted and transport failure retain evidence. The send-result
+`message_id` is reply-derived and not reliable user-row correlation, despite its client comment.
+A generic optional native caller identity needs scoping, restart-dedupe, queued delivery and
+acknowledgement contracts before adoption. Never replace that primitive with text matching,
+host-history deletion or broadened authority. No upstream patch or new runtime repair is
+implemented by this finding. The [bounded diagnosis](https://github.com/MahdiHedhli/HermesBotMobile/blob/d8b0f55/docs/research/bot-chat-send-identity-gap-2026-10-02.md)
+records verification requirements. The user-visible bug remains open; the screenshot has no
+build badge. This does not refresh the Sept 28 upstream snapshot.
+
 ### Optional media reads and mint cost (2026-10-01)
 
 HMP draft [#70](https://github.com/MahdiHedhli/hermes-hmp/pull/70), `c0f2343`, now has
